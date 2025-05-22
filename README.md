@@ -193,6 +193,44 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
+## Known Issues and Solutions
+
+### PyGithub PaginatedList Conversion Issue
+
+**Problem**: When working with PyGithub's `PaginatedList` objects (returned by `user.get_repos()`), using `list(paginated_list)` can cause a `TypeError: object of type 'Repository' has no len()` error.
+
+**Root Cause**: The `list()` constructor internally tries to optimize the conversion by checking if the object has a `__len__` method. During this process, it appears to call `len()` on individual Repository objects within the PaginatedList, which don't support the `len()` operation.
+
+**Solution**: Instead of using `list(paginated_list)`, manually iterate through the PaginatedList:
+
+```python
+# ❌ This causes the error
+repos_list = list(user.get_repos())
+
+# ✅ This works correctly
+repos = user.get_repos()
+repos_list = []
+for repo in repos:
+    repos_list.append(repo)
+```
+
+**Alternative Solutions**:
+```python
+# Using list comprehension (also works)
+repos_list = [repo for repo in user.get_repos()]
+
+# Using itertools.chain (if you need to combine multiple PaginatedLists)
+import itertools
+repos_list = list(itertools.chain(user.get_repos()))
+```
+
+**Impact**: This issue affects any code that needs to:
+- Get the count of repositories (`len()` operation)
+- Convert PaginatedList to a regular Python list for processing
+- Pass repository collections to functions expecting List[Repository]
+
+**Testing**: This issue was discovered through debugging when the application threw `TypeError: object of type 'Repository' has no len()` despite no explicit `len()` calls on Repository objects in the codebase.
+
 ## License
 
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
