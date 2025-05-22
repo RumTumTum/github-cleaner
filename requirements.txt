@@ -1,6 +1,7 @@
-PyGithub>=2.1.1
-click>=8.1.7
-rich>=13.6.0
+PyGithub==2.6.1
+click==8.1.8
+rich==14.0.0
+urllib3<2.0  # Avoid OpenSSL warning on macOS
 
 # Test dependencies
-pytest>=7.3.1
+pytest==8.3.5
