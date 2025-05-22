@@ -18,6 +18,7 @@ A Python CLI tool to manage GitHub repositories efficiently. Clean up your GitHu
 - **Repository Export**: Generate lists of repository names for further processing
 - **Single Repository Management**: Archive or delete individual repositories via CLI
 - **Batch Operations**: Process multiple repositories from a text file
+- **Public Repository Discovery**: View any user's public repositories without authentication using just their GitHub handle
 
 ## Installation
 
