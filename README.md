@@ -13,12 +13,17 @@ A Python CLI tool to manage GitHub repositories efficiently. Clean up your GitHu
   - Filter by repository status (all, active, archived)
   - Clean, tabular output for easy reading
 
+- **Public Repository Discovery**: View any user's public repositories without authentication:
+  - Access any GitHub user's public repositories using just their username
+  - No GitHub token required for public repository viewing
+  - Same filtering capabilities (all, active, archived)
+  - Clean, tabular output showing repository details
+
 ### Coming Soon
 
 - **Repository Export**: Generate lists of repository names for further processing
 - **Single Repository Management**: Archive or delete individual repositories via CLI
 - **Batch Operations**: Process multiple repositories from a text file
-- **Public Repository Discovery**: View any user's public repositories without authentication using just their GitHub handle
 
 ## Installation
 
@@ -101,7 +106,7 @@ For persistent storage, add the export command to your shell profile file (e.g.,
 
 ## Usage
 
-### Viewing Repositories
+### Viewing Your Repositories
 
 ```bash
 # List all repositories
@@ -112,6 +117,19 @@ python main.py list --filter active
 
 # List only archived repositories
 python main.py list --filter archived
+```
+
+### Viewing Public Repositories (No Token Required)
+
+```bash
+# View all public repositories for a user
+python main.py public username
+
+# View only active public repositories for a user
+python main.py public username --filter active
+
+# View only archived public repositories for a user
+python main.py public username --filter archived
 ```
 
 ### Help
@@ -142,6 +160,32 @@ $ python main.py list
 Total repositories: 3
 ```
 
+### Viewing someone's public repositories
+
+```bash
+$ python main.py public octocat --filter active
+                    Active Public Repositories for @octocat                     
+┏━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Name               ┃ Visibility ┃ Status ┃ Description                       ┃
+┡━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ boysenberry-repo-1 │ Public     │ Active │ Testing                           │
+│ git-consortium     │ Public     │ Active │ This repo is for demonstration    │
+│                    │            │        │ purposes only.                    │
+│ hello-worId        │ Public     │ Active │ My first repository on GitHub.    │
+│ Hello-World        │ Public     │ Active │ My first repository on GitHub!    │
+│ linguist           │ Public     │ Active │ Language Savant. If your          │
+│                    │            │        │ repository's language is being    │
+│                    │            │        │ reported incorrectly, send us a   │
+│                    │            │        │ pull request!                     │
+│ octocat.github.io  │ Public     │ Active │                                   │
+│ Spoon-Knife        │ Public     │ Active │ This repo is for demonstration    │
+│                    │            │        │ purposes only.                    │
+│ test-repo1         │ Public     │ Active │                                   │
+└────────────────────┴────────────┴────────┴───────────────────────────────────┘
+
+Total public repositories: 8
+```
+
 ## Development
 
 ### Setting up a development environment
@@ -167,21 +211,27 @@ pip install -e ".[dev]"
 ### Running tests
 
 ```bash
-# Install test dependencies
-pip install pytest
-
 # Run all tests
 pytest
-
-# Run specific test file
-pytest tests/test_list_repos.py
 
 # Run with verbose output
 pytest -v
 
-# Run with coverage report
-pytest --cov=github_cleaner
+# Run specific test files
+pytest tests/test_list_repos.py      # Tests for authenticated repository listing
+pytest tests/test_public_repos.py   # Tests for public repository discovery
+
+# Run with coverage report (requires pytest-cov)
+pytest --cov=main
 ```
+
+### Test Coverage
+
+The test suite covers:
+- **Authenticated Operations**: Repository listing with filtering (all, active, archived)
+- **Public Repository Discovery**: Unauthenticated access to any user's public repos
+- **Error Handling**: GitHub API errors, user not found, network issues
+- **Edge Cases**: Empty repository lists, various filter combinations
 
 ## Contributing
 
