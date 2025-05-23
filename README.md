@@ -13,9 +13,20 @@ A Python CLI tool to manage GitHub repositories efficiently. Clean up your GitHu
   - Filter by repository status (all, active, archived)
   - Clean, tabular output for easy reading
 
+- **Public Repository Discovery**: View any user's public repositories without authentication:
+  - Access any GitHub user's public repositories using just their username
+  - No GitHub token required for public repository viewing
+  - Same filtering capabilities (all, active, archived)
+  - Clean, tabular output showing repository details
+
+- **Repository Export**: Generate lists of repository names for further processing:
+  - Export your repositories or any user's public repositories to text files
+  - Full repository names in `owner/repo` format for easy API usage
+  - Same filtering options (all, active, archived) available for export
+  - Seamless integration with existing list and public commands via `--export` flag
+
 ### Coming Soon
 
-- **Repository Export**: Generate lists of repository names for further processing
 - **Single Repository Management**: Archive or delete individual repositories via CLI
 - **Batch Operations**: Process multiple repositories from a text file
 
@@ -100,7 +111,7 @@ For persistent storage, add the export command to your shell profile file (e.g.,
 
 ## Usage
 
-### Viewing Repositories
+### Viewing Your Repositories
 
 ```bash
 # List all repositories
@@ -113,6 +124,47 @@ python main.py list --filter active
 python main.py list --filter archived
 ```
 
+### Viewing Public Repositories (No Token Required)
+
+```bash
+# View all public repositories for a user
+python main.py public username
+
+# View only active public repositories for a user
+python main.py public username --filter active
+
+# View only archived public repositories for a user
+python main.py public username --filter archived
+```
+
+### Exporting Repository Lists
+
+Export repository names to text files for further processing. All exports use the full `owner/repo` format.
+
+```bash
+# Export all your repositories
+python main.py list --export my-repos.txt
+
+# Export only active repositories
+python main.py list --filter active --export active-repos.txt
+
+# Export only archived repositories  
+python main.py list --filter archived --export archived-repos.txt
+
+# Export all public repositories for a user
+python main.py public octocat --export octocat-repos.txt
+
+# Export only active public repositories for a user
+python main.py public octocat --filter active --export octocat-active.txt
+```
+
+**Export File Format:**
+```
+owner/repository-name-1
+owner/repository-name-2
+owner/repository-name-3
+```
+
 ### Help
 
 ```bash
@@ -121,6 +173,7 @@ python main.py --help
 
 # Display help for a specific command
 python main.py list --help
+python main.py public --help
 ```
 
 ## Examples
@@ -139,6 +192,49 @@ $ python main.py list
 └────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
 Total repositories: 3
+```
+
+### Viewing someone's public repositories
+
+```bash
+$ python main.py public octocat --filter active
+                    Active Public Repositories for @octocat                     
+┏━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Name               ┃ Visibility ┃ Status ┃ Description                       ┃
+┡━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ boysenberry-repo-1 │ Public     │ Active │ Testing                           │
+│ git-consortium     │ Public     │ Active │ This repo is for demonstration    │
+│                    │            │        │ purposes only.                    │
+│ hello-worId        │ Public     │ Active │ My first repository on GitHub.    │
+│ Hello-World        │ Public     │ Active │ My first repository on GitHub!    │
+│ linguist           │ Public     │ Active │ Language Savant. If your          │
+│                    │            │        │ repository's language is being    │
+│                    │            │        │ reported incorrectly, send us a   │
+│                    │            │        │ pull request!                     │
+│ octocat.github.io  │ Public     │ Active │                                   │
+│ Spoon-Knife        │ Public     │ Active │ This repo is for demonstration    │
+│                    │            │        │ purposes only.                    │
+│ test-repo1         │ Public     │ Active │                                   │
+└────────────────────┴────────────┴────────┴───────────────────────────────────┘
+
+Total public repositories: 8
+```
+
+### Exporting repository lists
+
+```bash
+$ python main.py public octocat --filter active --export octocat-repos.txt
+Success: Exported 8 active public repositories for @octocat to octocat-repos.txt
+
+$ cat octocat-repos.txt
+octocat/boysenberry-repo-1
+octocat/git-consortium
+octocat/hello-worId
+octocat/Hello-World
+octocat/linguist
+octocat/octocat.github.io
+octocat/Spoon-Knife
+octocat/test-repo1
 ```
 
 ## Development
@@ -166,21 +262,31 @@ pip install -e ".[dev]"
 ### Running tests
 
 ```bash
-# Install test dependencies
-pip install pytest
-
 # Run all tests
 pytest
-
-# Run specific test file
-pytest tests/test_list_repos.py
 
 # Run with verbose output
 pytest -v
 
-# Run with coverage report
-pytest --cov=github_cleaner
+# Run specific test files
+pytest tests/test_list_repos.py      # Tests for authenticated repository listing
+pytest tests/test_public_repos.py   # Tests for public repository discovery
+pytest tests/test_export_repos.py   # Tests for export functionality (--export flag)
+
+# Run with coverage report (requires pytest-cov)
+pytest --cov=main
 ```
+
+### Test Coverage
+
+The test suite covers:
+- **Authenticated Operations**: Repository listing with filtering (all, active, archived)
+- **Public Repository Discovery**: Unauthenticated access to any user's public repos
+- **Repository Export**: Export functionality via `--export` flag for both list and public commands
+- **File Operations**: Export file creation, content validation, permission error handling
+- **Data Format Validation**: Ensuring full repository names (`owner/repo`) in export files
+- **Error Handling**: GitHub API errors, user not found, network issues, file system errors
+- **Edge Cases**: Empty repository lists, various filter combinations, mixed repository types
 
 ## Contributing
 
@@ -191,6 +297,44 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 3. Commit your changes (`git commit -m 'Add some amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+## Known Issues and Solutions
+
+### PyGithub PaginatedList Conversion Issue
+
+**Problem**: When working with PyGithub's `PaginatedList` objects (returned by `user.get_repos()`), using `list(paginated_list)` can cause a `TypeError: object of type 'Repository' has no len()` error.
+
+**Root Cause**: The `list()` constructor internally tries to optimize the conversion by checking if the object has a `__len__` method. During this process, it appears to call `len()` on individual Repository objects within the PaginatedList, which don't support the `len()` operation.
+
+**Solution**: Instead of using `list(paginated_list)`, manually iterate through the PaginatedList:
+
+```python
+# ❌ This causes the error
+repos_list = list(user.get_repos())
+
+# ✅ This works correctly
+repos = user.get_repos()
+repos_list = []
+for repo in repos:
+    repos_list.append(repo)
+```
+
+**Alternative Solutions**:
+```python
+# Using list comprehension (also works)
+repos_list = [repo for repo in user.get_repos()]
+
+# Using itertools.chain (if you need to combine multiple PaginatedLists)
+import itertools
+repos_list = list(itertools.chain(user.get_repos()))
+```
+
+**Impact**: This issue affects any code that needs to:
+- Get the count of repositories (`len()` operation)
+- Convert PaginatedList to a regular Python list for processing
+- Pass repository collections to functions expecting List[Repository]
+
+**Testing**: This issue was discovered through debugging when the application threw `TypeError: object of type 'Repository' has no len()` despite no explicit `len()` calls on Repository objects in the codebase.
 
 ## License
 
