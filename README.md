@@ -19,9 +19,14 @@ A Python CLI tool to manage GitHub repositories efficiently. Clean up your GitHu
   - Same filtering capabilities (all, active, archived)
   - Clean, tabular output showing repository details
 
+- **Repository Export**: Generate lists of repository names for further processing:
+  - Export your repositories or any user's public repositories to text files
+  - Full repository names in `owner/repo` format for easy API usage
+  - Same filtering options (all, active, archived) available for export
+  - Seamless integration with existing list and public commands via `--export` flag
+
 ### Coming Soon
 
-- **Repository Export**: Generate lists of repository names for further processing
 - **Single Repository Management**: Archive or delete individual repositories via CLI
 - **Batch Operations**: Process multiple repositories from a text file
 
@@ -132,6 +137,34 @@ python main.py public username --filter active
 python main.py public username --filter archived
 ```
 
+### Exporting Repository Lists
+
+Export repository names to text files for further processing. All exports use the full `owner/repo` format.
+
+```bash
+# Export all your repositories
+python main.py list --export my-repos.txt
+
+# Export only active repositories
+python main.py list --filter active --export active-repos.txt
+
+# Export only archived repositories  
+python main.py list --filter archived --export archived-repos.txt
+
+# Export all public repositories for a user
+python main.py public octocat --export octocat-repos.txt
+
+# Export only active public repositories for a user
+python main.py public octocat --filter active --export octocat-active.txt
+```
+
+**Export File Format:**
+```
+owner/repository-name-1
+owner/repository-name-2
+owner/repository-name-3
+```
+
 ### Help
 
 ```bash
@@ -140,6 +173,7 @@ python main.py --help
 
 # Display help for a specific command
 python main.py list --help
+python main.py public --help
 ```
 
 ## Examples
@@ -186,6 +220,23 @@ $ python main.py public octocat --filter active
 Total public repositories: 8
 ```
 
+### Exporting repository lists
+
+```bash
+$ python main.py public octocat --filter active --export octocat-repos.txt
+Success: Exported 8 active public repositories for @octocat to octocat-repos.txt
+
+$ cat octocat-repos.txt
+octocat/boysenberry-repo-1
+octocat/git-consortium
+octocat/hello-worId
+octocat/Hello-World
+octocat/linguist
+octocat/octocat.github.io
+octocat/Spoon-Knife
+octocat/test-repo1
+```
+
 ## Development
 
 ### Setting up a development environment
@@ -220,6 +271,7 @@ pytest -v
 # Run specific test files
 pytest tests/test_list_repos.py      # Tests for authenticated repository listing
 pytest tests/test_public_repos.py   # Tests for public repository discovery
+pytest tests/test_export_repos.py   # Tests for export functionality (--export flag)
 
 # Run with coverage report (requires pytest-cov)
 pytest --cov=main
@@ -230,8 +282,11 @@ pytest --cov=main
 The test suite covers:
 - **Authenticated Operations**: Repository listing with filtering (all, active, archived)
 - **Public Repository Discovery**: Unauthenticated access to any user's public repos
-- **Error Handling**: GitHub API errors, user not found, network issues
-- **Edge Cases**: Empty repository lists, various filter combinations
+- **Repository Export**: Export functionality via `--export` flag for both list and public commands
+- **File Operations**: Export file creation, content validation, permission error handling
+- **Data Format Validation**: Ensuring full repository names (`owner/repo`) in export files
+- **Error Handling**: GitHub API errors, user not found, network issues, file system errors
+- **Edge Cases**: Empty repository lists, various filter combinations, mixed repository types
 
 ## Contributing
 

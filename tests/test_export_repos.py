@@ -23,14 +23,14 @@ class MockRepository:
         return self.name
 
 
-class TestExportRepositories(unittest.TestCase):
+class TestExportFlag(unittest.TestCase):
     def setUp(self):
         self.runner = CliRunner()
     
     @patch('main.Github')
     @patch('main.get_github_token', return_value='fake-token')
     @patch('builtins.open', new_callable=mock_open)
-    def test_export_all_repos_default_filename(self, mock_file, mock_get_token, mock_github):
+    def test_list_command_with_export_flag(self, mock_file, mock_get_token, mock_github):
         # Set up mock repos
         mock_repo1 = MockRepository(
             name='repo1',
@@ -49,8 +49,8 @@ class TestExportRepositories(unittest.TestCase):
         mock_user.get_repos.return_value = [mock_repo1, mock_repo2]
         mock_github.return_value.get_user.return_value = mock_user
         
-        # Run the export command
-        result = self.runner.invoke(cli, ['export'])
+        # Run the list command with export
+        result = self.runner.invoke(cli, ['list', '--export', 'test-repos.txt'])
         
         # Check the command ran successfully
         self.assertEqual(result.exit_code, 0)
@@ -58,20 +58,21 @@ class TestExportRepositories(unittest.TestCase):
         # Verify GitHub was called with token
         mock_github.assert_called_once_with('fake-token')
         
-        # Verify file was opened with default name
-        mock_file.assert_called_once_with('repositories.txt', 'w')
+        # Verify file was opened
+        mock_file.assert_called_once_with('test-repos.txt', 'w')
         
-        # Verify full repository names were written (not just names)
+        # Verify full repository names were written
         mock_file().write.assert_any_call('testuser/repo1\n')
         mock_file().write.assert_any_call('testuser/repo2\n')
         
-        # Verify success message
-        self.assertIn('Exported 2 all repositories to repositories.txt', result.output)
+        # Verify success message (no table display)
+        self.assertIn('Exported 2 all repositories to test-repos.txt', result.output)
+        self.assertNotIn('Total repositories:', result.output)  # Table not shown
 
     @patch('main.Github')
     @patch('main.get_github_token', return_value='fake-token')
     @patch('builtins.open', new_callable=mock_open)
-    def test_export_active_repos_custom_filename(self, mock_file, mock_get_token, mock_github):
+    def test_list_command_with_export_and_filter(self, mock_file, mock_get_token, mock_github):
         # Set up mock repos
         mock_repo1 = MockRepository(
             name='active-repo',
@@ -90,13 +91,13 @@ class TestExportRepositories(unittest.TestCase):
         mock_user.get_repos.return_value = [mock_repo1, mock_repo2]
         mock_github.return_value.get_user.return_value = mock_user
         
-        # Run the export command with active filter and custom filename
-        result = self.runner.invoke(cli, ['export', '--filter', 'active', '--output', 'active-repos.txt'])
+        # Run the list command with active filter and export
+        result = self.runner.invoke(cli, ['list', '--filter', 'active', '--export', 'active-repos.txt'])
         
         # Check the command ran successfully
         self.assertEqual(result.exit_code, 0)
         
-        # Verify file was opened with custom name
+        # Verify file was opened with correct name
         mock_file.assert_called_once_with('active-repos.txt', 'w')
         
         # Verify only active repo was written
@@ -106,19 +107,71 @@ class TestExportRepositories(unittest.TestCase):
         self.assertIn('Exported 1 active repositories to active-repos.txt', result.output)
 
     @patch('main.Github')
-    @patch('main.get_github_token', return_value='fake-token')
-    @patch('builtins.open', new_callable=mock_open)
-    def test_export_archived_repos(self, mock_file, mock_get_token, mock_github):
+    def test_public_command_with_export_flag(self, mock_github):
+        # Set up mock repos
+        mock_repo1 = MockRepository(
+            name='public-repo1',
+            full_name='octocat/public-repo1',
+            archived=False
+        )
+        
+        mock_repo2 = MockRepository(
+            name='public-repo2',
+            full_name='octocat/public-repo2',
+            archived=True
+        )
+        
+        # Set up mock user and github (no authentication)
+        mock_user = MagicMock()
+        mock_user.get_repos.return_value = [mock_repo1, mock_repo2]
+        mock_github.return_value.get_user.return_value = mock_user
+        
+        # Use temporary file for real file writing test
+        with tempfile.NamedTemporaryFile(mode='w+', delete=False) as temp_file:
+            temp_filename = temp_file.name
+        
+        try:
+            # Run the public command with export
+            result = self.runner.invoke(cli, ['public', 'octocat', '--export', temp_filename])
+            
+            # Check the command ran successfully
+            self.assertEqual(result.exit_code, 0)
+            
+            # Verify GitHub was called without authentication
+            mock_github.assert_called_once_with()
+            
+            # Verify get_user was called with username
+            mock_github.return_value.get_user.assert_called_once_with('octocat')
+            
+            # Verify get_repos was called with type='public'
+            mock_user.get_repos.assert_called_once_with(type='public')
+            
+            # Read the actual file and verify content
+            with open(temp_filename, 'r') as f:
+                content = f.read()
+            
+            self.assertIn('octocat/public-repo1\n', content)
+            self.assertIn('octocat/public-repo2\n', content)
+            
+            # Verify success message includes username
+            self.assertIn('Exported 2 all public repositories for @octocat', result.output)
+            
+        finally:
+            # Clean up temporary file
+            os.unlink(temp_filename)
+
+    @patch('main.Github')
+    def test_public_command_with_export_and_filter(self, mock_github):
         # Set up mock repos
         mock_repo1 = MockRepository(
             name='active-repo',
-            full_name='testuser/active-repo',
+            full_name='octocat/active-repo',
             archived=False
         )
         
         mock_repo2 = MockRepository(
             name='archived-repo',
-            full_name='testuser/archived-repo',
+            full_name='octocat/archived-repo',
             archived=True
         )
         
@@ -127,61 +180,73 @@ class TestExportRepositories(unittest.TestCase):
         mock_user.get_repos.return_value = [mock_repo1, mock_repo2]
         mock_github.return_value.get_user.return_value = mock_user
         
-        # Run the export command with archived filter
-        result = self.runner.invoke(cli, ['export', '--filter', 'archived'])
+        # Use temporary file for testing
+        with tempfile.NamedTemporaryFile(mode='w+', delete=False) as temp_file:
+            temp_filename = temp_file.name
         
-        # Check the command ran successfully
-        self.assertEqual(result.exit_code, 0)
-        
-        # Verify only archived repo was written
-        mock_file().write.assert_called_once_with('testuser/archived-repo\n')
-        
-        # Verify success message
-        self.assertIn('Exported 1 archived repositories', result.output)
+        try:
+            # Run the public command with archived filter and export
+            result = self.runner.invoke(cli, ['public', 'octocat', '--filter', 'archived', '--export', temp_filename])
+            
+            # Check the command ran successfully
+            self.assertEqual(result.exit_code, 0)
+            
+            # Read the file and verify only archived repo is there
+            with open(temp_filename, 'r') as f:
+                content = f.read()
+            
+            self.assertIn('octocat/archived-repo\n', content)
+            self.assertNotIn('octocat/active-repo\n', content)
+            
+            # Verify success message
+            self.assertIn('Exported 1 archived public repositories for @octocat', result.output)
+            
+        finally:
+            # Clean up temporary file
+            os.unlink(temp_filename)
 
     @patch('main.Github')
     @patch('main.get_github_token', return_value='fake-token')
-    @patch('builtins.open', new_callable=mock_open)
-    def test_export_no_repositories(self, mock_file, mock_get_token, mock_github):
-        # Set up mock user with no repositories
+    def test_list_command_without_export_shows_table(self, mock_get_token, mock_github):
+        # Set up mock repos
+        mock_repo = MockRepository(name='test-repo', full_name='testuser/test-repo')
+        
+        # Set up mock user and github
         mock_user = MagicMock()
-        mock_user.get_repos.return_value = []
+        mock_user.get_repos.return_value = [mock_repo]
         mock_github.return_value.get_user.return_value = mock_user
         
-        # Run the export command
-        result = self.runner.invoke(cli, ['export'])
+        # Run the list command without export
+        result = self.runner.invoke(cli, ['list'])
         
         # Check the command ran successfully
         self.assertEqual(result.exit_code, 0)
         
-        # Verify file was opened
-        mock_file.assert_called_once_with('repositories.txt', 'w')
-        
-        # Verify no writes occurred (empty repo list)
-        mock_file().write.assert_not_called()
-        
-        # Verify success message shows zero count
-        self.assertIn('Exported 0 all repositories', result.output)
+        # Verify table is displayed (not export)
+        self.assertIn('All GitHub Repositories', result.output)
+        self.assertIn('Total repositories: 1', result.output)
+        self.assertNotIn('Exported', result.output)
 
     @patch('main.Github')
-    @patch('main.get_github_token', return_value='fake-token')
-    def test_export_github_exception(self, mock_get_token, mock_github):
-        # Setup GitHub to raise an exception
-        from github import GithubException
-        mock_exception = GithubException(
-            status=500,
-            data={'message': 'Server Error'}
-        )
-        mock_github.return_value.get_user.side_effect = mock_exception
+    def test_public_command_without_export_shows_table(self, mock_github):
+        # Set up mock repos
+        mock_repo = MockRepository(name='test-repo', full_name='octocat/test-repo')
         
-        # Run the export command
-        result = self.runner.invoke(cli, ['export'])
+        # Set up mock user and github
+        mock_user = MagicMock()
+        mock_user.get_repos.return_value = [mock_repo]
+        mock_github.return_value.get_user.return_value = mock_user
         
-        # Check the command ran successfully (errors are handled)
+        # Run the public command without export
+        result = self.runner.invoke(cli, ['public', 'octocat'])
+        
+        # Check the command ran successfully
         self.assertEqual(result.exit_code, 0)
         
-        # Verify GitHub error was printed
-        self.assertIn('GitHub Error', result.output)
+        # Verify table is displayed (not export)
+        self.assertIn('All Public Repositories for @octocat', result.output)
+        self.assertIn('Total public repositories: 1', result.output)
+        self.assertNotIn('Exported', result.output)
 
     @patch('main.Github')
     @patch('main.get_github_token', return_value='fake-token')
@@ -195,8 +260,8 @@ class TestExportRepositories(unittest.TestCase):
         mock_user.get_repos.return_value = [mock_repo]
         mock_github.return_value.get_user.return_value = mock_user
         
-        # Run the export command
-        result = self.runner.invoke(cli, ['export'])
+        # Run the list command with export
+        result = self.runner.invoke(cli, ['list', '--export', '/invalid/path/file.txt'])
         
         # Check the command ran successfully (errors are handled)
         self.assertEqual(result.exit_code, 0)

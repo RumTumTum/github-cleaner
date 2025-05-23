@@ -72,6 +72,13 @@ def filter_repositories(repos: List[Repository], filter_type: str) -> List[Repos
         raise ValueError(f"Invalid filter type: {filter_type}")
 
 
+def export_repositories(repos: List[Repository], output_file: str) -> None:
+    """Export repository full names to a text file, one per line."""
+    with open(output_file, 'w') as f:
+        for repo in repos:
+            f.write(f"{repo.full_name}\n")
+
+
 def create_repository_table(repos: List[Repository], filter_desc: str, username: Optional[str] = None) -> Table:
     """Create and populate a table with repository information."""
     if username:
@@ -108,7 +115,13 @@ def cli():
     default="all",
     help="Filter repositories by status",
 )
-def list(repo_filter: str):
+@click.option(
+    "--export",
+    "-e",
+    "export_file",
+    help="Export repository names to specified file",
+)
+def list(repo_filter: str, export_file: Optional[str]):
     """List GitHub repositories based on filter criteria."""
     try:
         # Initialize GitHub client
@@ -123,10 +136,15 @@ def list(repo_filter: str):
         # Get filter description
         filter_desc = repo_filter.capitalize() if repo_filter != "all" else "All"
         
-        # Create and display table
-        table = create_repository_table(filtered_repos, filter_desc)
-        console.print(table)
-        console.print(f"\nTotal repositories: {len(filtered_repos)}")
+        # Export to file if requested
+        if export_file:
+            export_repositories(filtered_repos, export_file)
+            console.print(f"[green]Success:[/] Exported {len(filtered_repos)} {filter_desc.lower()} repositories to {export_file}")
+        else:
+            # Create and display table
+            table = create_repository_table(filtered_repos, filter_desc)
+            console.print(table)
+            console.print(f"\nTotal repositories: {len(filtered_repos)}")
         
     except GithubException as e:
         console.print(f"[bold red]GitHub Error:[/] {e}")
@@ -143,7 +161,13 @@ def list(repo_filter: str):
     default="all",
     help="Filter repositories by status",
 )
-def public(username: str, repo_filter: str):
+@click.option(
+    "--export",
+    "-e",
+    "export_file",
+    help="Export repository names to specified file",
+)
+def public(username: str, repo_filter: str, export_file: Optional[str]):
     """View public repositories for any GitHub user."""
     try:
         # Initialize GitHub client without authentication
@@ -158,10 +182,15 @@ def public(username: str, repo_filter: str):
         # Get filter description
         filter_desc = repo_filter.capitalize() if repo_filter != "all" else "All"
         
-        # Create and display table
-        table = create_repository_table(filtered_repos, filter_desc, username)
-        console.print(table)
-        console.print(f"\nTotal public repositories: {len(filtered_repos)}")
+        # Export to file if requested
+        if export_file:
+            export_repositories(filtered_repos, export_file)
+            console.print(f"[green]Success:[/] Exported {len(filtered_repos)} {filter_desc.lower()} public repositories for @{username} to {export_file}")
+        else:
+            # Create and display table
+            table = create_repository_table(filtered_repos, filter_desc, username)
+            console.print(table)
+            console.print(f"\nTotal public repositories: {len(filtered_repos)}")
         
     except GithubException as e:
         if "Not Found" in str(e):
