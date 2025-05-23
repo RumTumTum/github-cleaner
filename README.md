@@ -122,6 +122,12 @@ python main.py list --filter active
 
 # List only archived repositories
 python main.py list --filter archived
+
+# Show full repository names (owner/repo format)
+python main.py list --full-names
+
+# Combine filters with full names
+python main.py list --filter active --full-names
 ```
 
 ### Viewing Public Repositories (No Token Required)
@@ -135,11 +141,17 @@ python main.py public username --filter active
 
 # View only archived public repositories for a user
 python main.py public username --filter archived
+
+# Show full repository names (owner/repo format)
+python main.py public username --full-names
+
+# Combine filters with full names
+python main.py public username --filter active --full-names
 ```
 
 ### Exporting Repository Lists
 
-Export repository names to text files for further processing. All exports use the full `owner/repo` format.
+Export repository names to text files for further processing. All exports use the full `owner/repo` format regardless of display options.
 
 ```bash
 # Export all your repositories
@@ -156,6 +168,9 @@ python main.py public octocat --export octocat-repos.txt
 
 # Export only active public repositories for a user
 python main.py public octocat --filter active --export octocat-active.txt
+
+# Note: --full-names flag doesn't affect export format
+python main.py list --full-names --export repos.txt  # Still exports owner/repo format
 ```
 
 **Export File Format:**
@@ -237,6 +252,33 @@ octocat/Spoon-Knife
 octocat/test-repo1
 ```
 
+### Displaying full repository names
+
+Compare the difference between default display and full names display:
+
+```bash
+# Default display (just repository names)
+$ python main.py public octocat --filter active
+                    Active Public Repositories for @octocat                     
+┏━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Name               ┃ Visibility ┃ Status ┃ Description                       ┃
+┡━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ boysenberry-repo-1 │ Public     │ Active │ Testing                           │
+│ Hello-World        │ Public     │ Active │ My first repository on GitHub!    │
+└────────────────────┴────────────┴────────┴───────────────────────────────────┘
+
+# Full names display (owner/repo format)
+$ python main.py public octocat --filter active --full-names
+                    Active Public Repositories for @octocat                     
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Name                       ┃ Visibility ┃ Status ┃ Description               ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ octocat/boysenberry-repo-1 │ Public     │ Active │ Testing                   │
+│ octocat/Hello-World        │ Public     │ Active │ My first repository on    │
+│                            │            │        │ GitHub!                   │
+└────────────────────────────┴────────────┴────────┴───────────────────────────┘
+```
+
 ## Development
 
 ### Setting up a development environment
@@ -272,6 +314,7 @@ pytest -v
 pytest tests/test_list_repos.py      # Tests for authenticated repository listing
 pytest tests/test_public_repos.py   # Tests for public repository discovery
 pytest tests/test_export_repos.py   # Tests for export functionality (--export flag)
+pytest tests/test_full_names.py     # Tests for full names display (--full-names flag)
 
 # Run with coverage report (requires pytest-cov)
 pytest --cov=main
@@ -283,8 +326,11 @@ The test suite covers:
 - **Authenticated Operations**: Repository listing with filtering (all, active, archived)
 - **Public Repository Discovery**: Unauthenticated access to any user's public repos
 - **Repository Export**: Export functionality via `--export` flag for both list and public commands
+- **Display Options**: Full names display via `--full-names` flag for both list and public commands
 - **File Operations**: Export file creation, content validation, permission error handling
 - **Data Format Validation**: Ensuring full repository names (`owner/repo`) in export files
+- **UI/Display Testing**: Verification of table output formats and content display
+- **Flag Combinations**: Testing interactions between filters, export, and display options
 - **Error Handling**: GitHub API errors, user not found, network issues, file system errors
 - **Edge Cases**: Empty repository lists, various filter combinations, mixed repository types
 
