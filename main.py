@@ -79,7 +79,7 @@ def export_repositories(repos: List[Repository], output_file: str) -> None:
             f.write(f"{repo.full_name}\n")
 
 
-def create_repository_table(repos: List[Repository], filter_desc: str, username: Optional[str] = None) -> Table:
+def create_repository_table(repos: List[Repository], filter_desc: str, username: Optional[str] = None, full_names: bool = False) -> Table:
     """Create and populate a table with repository information."""
     if username:
         title = f"{filter_desc} Public Repositories for @{username}"
@@ -96,7 +96,8 @@ def create_repository_table(repos: List[Repository], filter_desc: str, username:
         status = "Archived" if repo.archived else "Active"
         visibility = "Private" if repo.private else "Public"
         description = repo.description or ""
-        table.add_row(repo.name, visibility, status, description)
+        repo_name = repo.full_name if full_names else repo.name
+        table.add_row(repo_name, visibility, status, description)
     
     return table
 
@@ -121,7 +122,12 @@ def cli():
     "export_file",
     help="Export repository names to specified file",
 )
-def list(repo_filter: str, export_file: Optional[str]):
+@click.option(
+    "--full-names",
+    is_flag=True,
+    help="Display full repository names (owner/repo) in table output",
+)
+def list(repo_filter: str, export_file: Optional[str], full_names: bool):
     """List GitHub repositories based on filter criteria."""
     try:
         # Initialize GitHub client
@@ -142,7 +148,7 @@ def list(repo_filter: str, export_file: Optional[str]):
             console.print(f"[green]Success:[/] Exported {len(filtered_repos)} {filter_desc.lower()} repositories to {export_file}")
         else:
             # Create and display table
-            table = create_repository_table(filtered_repos, filter_desc)
+            table = create_repository_table(filtered_repos, filter_desc, username=None, full_names=full_names)
             console.print(table)
             console.print(f"\nTotal repositories: {len(filtered_repos)}")
         
@@ -167,7 +173,12 @@ def list(repo_filter: str, export_file: Optional[str]):
     "export_file",
     help="Export repository names to specified file",
 )
-def public(username: str, repo_filter: str, export_file: Optional[str]):
+@click.option(
+    "--full-names",
+    is_flag=True,
+    help="Display full repository names (owner/repo) in table output",
+)
+def public(username: str, repo_filter: str, export_file: Optional[str], full_names: bool):
     """View public repositories for any GitHub user."""
     try:
         # Initialize GitHub client without authentication
@@ -188,7 +199,7 @@ def public(username: str, repo_filter: str, export_file: Optional[str]):
             console.print(f"[green]Success:[/] Exported {len(filtered_repos)} {filter_desc.lower()} public repositories for @{username} to {export_file}")
         else:
             # Create and display table
-            table = create_repository_table(filtered_repos, filter_desc, username)
+            table = create_repository_table(filtered_repos, filter_desc, username, full_names)
             console.print(table)
             console.print(f"\nTotal public repositories: {len(filtered_repos)}")
         
