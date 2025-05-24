@@ -91,16 +91,59 @@ def read_repository_list(file_path: str) -> List[str]:
         raise Exception(f"Error reading repository list file: {e}")
 
 
-def create_operation_preview_table(repo_names: List[str], operation: str) -> Table:
+def get_repository_status(github_client: Github, repo_name: str) -> str:
+    """Get the current status of a repository."""
+    try:
+        repo = github_client.get_repo(repo_name)
+        if repo.archived:
+            return "Already Archived"
+        else:
+            return "Active"
+    except GithubException as e:
+        if "Not Found" in str(e):
+            return "Not Found"
+        elif "permission" in str(e).lower() or "403" in str(e):
+            return "No Permission"
+        else:
+            return "Error"
+    except Exception:
+        return "Unknown"
+
+
+def create_operation_preview_table(repo_statuses: List[dict], operation: str) -> Table:
     """Create a table showing the planned operations on repositories."""
     table = Table(title=f"Planned Operation: {operation.upper()}")
     table.add_column("Repository", style="cyan")
     table.add_column("Current Status", style="yellow")
     table.add_column("Planned Action", style="red" if operation == "delete" else "magenta")
     
-    for repo_name in repo_names:
-        action_desc = "DELETE (irreversible)" if operation == "delete" else "ARCHIVE (reversible)"
-        table.add_row(repo_name, "Unknown", action_desc)
+    for repo_info in repo_statuses:
+        repo_name = repo_info["name"]
+        status = repo_info["status"]
+        
+        # Determine planned action based on current status
+        if operation == "delete":
+            if status in ["Not Found", "No Permission", "Error"]:
+                action_desc = "CANNOT DELETE"
+            else:
+                action_desc = "DELETE (irreversible)"
+        else:  # archive
+            if status == "Already Archived":
+                action_desc = "NO CHANGE NEEDED"
+            elif status in ["Not Found", "No Permission", "Error"]:
+                action_desc = "CANNOT ARCHIVE"
+            else:
+                action_desc = "ARCHIVE (reversible)"
+        
+        # Color code the status
+        if status in ["Not Found", "No Permission", "Error"]:
+            status_display = f"[red]{status}[/red]"
+        elif status == "Already Archived":
+            status_display = f"[dim]{status}[/dim]"
+        else:
+            status_display = f"[green]{status}[/green]"
+        
+        table.add_row(repo_name, status_display, action_desc)
     
     return table
 
@@ -359,17 +402,45 @@ def manage(file_path: str, operation: str):
         
         console.print(f"Found {len(repo_names)} repositories in {file_path}")
         
+        # Check repository statuses
+        console.print(f"\n[bold]Checking repository statuses...[/]")
+        g = init_github_client()
+        
+        repo_statuses = []
+        for i, repo_name in enumerate(repo_names, 1):
+            console.print(f"[{i}/{len(repo_names)}] Checking {repo_name}...", end="")
+            status = get_repository_status(g, repo_name)
+            repo_statuses.append({"name": repo_name, "status": status})
+            console.print(f" {status}")
+        
         # Show preview table
-        preview_table = create_operation_preview_table(repo_names, operation)
+        preview_table = create_operation_preview_table(repo_statuses, operation)
+        console.print("\n")
         console.print(preview_table)
         
-        # Ask for confirmation
-        if not confirm_operation(operation, len(repo_names)):
-            console.print("[yellow]Operation cancelled.[/]")
+        # Count actionable repositories
+        actionable_repos = []
+        for repo_info in repo_statuses:
+            status = repo_info["status"]
+            if operation == "archive":
+                if status not in ["Already Archived", "Not Found", "No Permission", "Error"]:
+                    actionable_repos.append(repo_info["name"])
+            else:  # delete
+                if status not in ["Not Found", "No Permission", "Error"]:
+                    actionable_repos.append(repo_info["name"])
+        
+        if not actionable_repos:
+            console.print(f"[yellow]No repositories can be {operation}d. All repositories are either already processed or inaccessible.[/]")
             return
         
-        # Initialize GitHub client
-        g = init_github_client()
+        if len(actionable_repos) < len(repo_names):
+            skipped = len(repo_names) - len(actionable_repos)
+            console.print(f"[yellow]Note: {skipped} repositories will be skipped due to status or permissions.[/]")
+        
+        # Ask for confirmation
+        if not confirm_operation(operation, len(actionable_repos)):
+            console.print("[yellow]Operation cancelled.[/]")
+            return
         
         # Perform operations
         console.print(f"\n[bold]Starting {operation} operations...[/]")
