@@ -8,7 +8,7 @@ from click.testing import CliRunner
 # Add the parent directory to the path so we can import main
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from main import cli, read_repository_list, perform_repository_operation
+from main import cli, read_repository_list, perform_repository_operation, get_repository_status
 
 # Create a mock for GitHub Repository objects
 class MockRepository:
@@ -171,8 +171,10 @@ class TestManageCommand(unittest.TestCase):
         finally:
             os.unlink(temp_filename)
     
+    @patch('main.get_repository_status', return_value="Active")
+    @patch('main.init_github_client')
     @patch('main.confirm_operation', return_value=False)
-    def test_manage_command_user_cancels(self, mock_confirm):
+    def test_manage_command_user_cancels(self, mock_confirm, mock_github_client, mock_status):
         """Test manage command when user cancels operation."""
         # Create temporary file
         with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
@@ -189,10 +191,11 @@ class TestManageCommand(unittest.TestCase):
         finally:
             os.unlink(temp_filename)
     
+    @patch('main.get_repository_status', return_value="Active")
     @patch('main.perform_repository_operation')
     @patch('main.init_github_client')
     @patch('main.confirm_operation', return_value=True)
-    def test_manage_command_successful_operations(self, mock_confirm, mock_github_client, mock_perform_op):
+    def test_manage_command_successful_operations(self, mock_confirm, mock_github_client, mock_perform_op, mock_status):
         """Test manage command with successful operations."""
         # Set up mocks
         mock_perform_op.side_effect = [
