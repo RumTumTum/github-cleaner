@@ -1,6 +1,8 @@
 # GitHub Cleaner
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Python package](https://github.com/yourusername/github-cleaner/actions/workflows/python-package.yml/badge.svg)](https://github.com/yourusername/github-cleaner/actions/workflows/python-package.yml)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 
 A Python CLI tool to manage GitHub repositories efficiently. Clean up your GitHub account by viewing, exporting, archiving, and deleting repositories with ease.
 
@@ -122,6 +124,12 @@ python main.py list --filter active
 
 # List only archived repositories
 python main.py list --filter archived
+
+# Show full repository names (owner/repo format)
+python main.py list --full-names
+
+# Combine filters with full names
+python main.py list --filter active --full-names
 ```
 
 ### Viewing Public Repositories (No Token Required)
@@ -135,11 +143,17 @@ python main.py public username --filter active
 
 # View only archived public repositories for a user
 python main.py public username --filter archived
+
+# Show full repository names (owner/repo format)
+python main.py public username --full-names
+
+# Combine filters with full names
+python main.py public username --filter active --full-names
 ```
 
 ### Exporting Repository Lists
 
-Export repository names to text files for further processing. All exports use the full `owner/repo` format.
+Export repository names to text files for further processing. All exports use the full `owner/repo` format regardless of display options.
 
 ```bash
 # Export all your repositories
@@ -156,6 +170,9 @@ python main.py public octocat --export octocat-repos.txt
 
 # Export only active public repositories for a user
 python main.py public octocat --filter active --export octocat-active.txt
+
+# Note: --full-names flag doesn't affect export format
+python main.py list --full-names --export repos.txt  # Still exports owner/repo format
 ```
 
 **Export File Format:**
@@ -237,6 +254,33 @@ octocat/Spoon-Knife
 octocat/test-repo1
 ```
 
+### Displaying full repository names
+
+Compare the difference between default display and full names display:
+
+```bash
+# Default display (just repository names)
+$ python main.py public octocat --filter active
+                    Active Public Repositories for @octocat                     
+┏━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Name               ┃ Visibility ┃ Status ┃ Description                       ┃
+┡━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ boysenberry-repo-1 │ Public     │ Active │ Testing                           │
+│ Hello-World        │ Public     │ Active │ My first repository on GitHub!    │
+└────────────────────┴────────────┴────────┴───────────────────────────────────┘
+
+# Full names display (owner/repo format)
+$ python main.py public octocat --filter active --full-names
+                    Active Public Repositories for @octocat                     
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Name                       ┃ Visibility ┃ Status ┃ Description               ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ octocat/boysenberry-repo-1 │ Public     │ Active │ Testing                   │
+│ octocat/Hello-World        │ Public     │ Active │ My first repository on    │
+│                            │            │        │ GitHub!                   │
+└────────────────────────────┴────────────┴────────┴───────────────────────────┘
+```
+
 ## Development
 
 ### Setting up a development environment
@@ -272,6 +316,7 @@ pytest -v
 pytest tests/test_list_repos.py      # Tests for authenticated repository listing
 pytest tests/test_public_repos.py   # Tests for public repository discovery
 pytest tests/test_export_repos.py   # Tests for export functionality (--export flag)
+pytest tests/test_full_names.py     # Tests for full names display (--full-names flag)
 
 # Run with coverage report (requires pytest-cov)
 pytest --cov=main
@@ -283,20 +328,97 @@ The test suite covers:
 - **Authenticated Operations**: Repository listing with filtering (all, active, archived)
 - **Public Repository Discovery**: Unauthenticated access to any user's public repos
 - **Repository Export**: Export functionality via `--export` flag for both list and public commands
+- **Display Options**: Full names display via `--full-names` flag for both list and public commands
 - **File Operations**: Export file creation, content validation, permission error handling
 - **Data Format Validation**: Ensuring full repository names (`owner/repo`) in export files
+- **UI/Display Testing**: Verification of table output formats and content display
+- **Flag Combinations**: Testing interactions between filters, export, and display options
 - **Error Handling**: GitHub API errors, user not found, network issues, file system errors
 - **Edge Cases**: Empty repository lists, various filter combinations, mixed repository types
 
+## Continuous Integration
+
+This project uses GitHub Actions for automated testing and quality assurance.
+
+### CI/CD Pipeline
+
+- **Workflow**: Runs on Python 3.9, 3.10, and 3.11
+- **Triggers**: 
+  - Push to `main` or `dev` branches
+  - Pull requests targeting `main` or `dev` branches
+- **Steps**:
+  1. **Dependency Installation**: Install project and test dependencies
+  2. **Linting**: Code quality checks with flake8
+  3. **Testing**: Full test suite execution with pytest
+
+### Branch Protection
+
+Both `main` and `dev` branches are protected with the following requirements:
+
+1. **Status Checks**: All CI tests must pass before merging
+2. **Required Reviews**: Pull request reviews required
+3. **No Direct Pushes**: Changes must come through pull requests
+4. **Up-to-date Branches**: Branches must be up-to-date before merging
+
+**Setting up Branch Protection (Repository Admin)**:
+
+1. Go to **Settings** → **Branches** in your GitHub repository
+2. Add protection rules for `main` and `dev` branches:
+   - ✅ **Require status checks to pass before merging**
+   - ✅ **Require branches to be up to date before merging**
+   - ✅ **Select specific status checks** (critical for preventing queued merges):
+     - `All Tests Complete` (summary job that ensures all tests pass)
+     - `Test Python 3.9` (individual test jobs)
+     - `Test Python 3.10`
+     - `Test Python 3.11`
+   - ✅ **Require pull request reviews before merging**
+   - ✅ **Dismiss stale reviews when new commits are pushed**
+   - ✅ **Do not allow bypassing the above settings**
+   - ✅ **Restrict pushes that create files larger than 100MB**
+
+**🔑 Key Fix**: Select **specific status checks** rather than just the general "Python package" workflow. This prevents merging while checks are queued/running.
+
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please follow our development workflow:
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### Development Workflow
+
+1. **Fork the repository**
+2. **Create your feature branch** from `dev`:
+   ```bash
+   git checkout dev
+   git pull origin dev
+   git checkout -b feature/amazing-feature
+   ```
+3. **Make your changes** and ensure tests pass:
+   ```bash
+   pytest
+   flake8 .
+   ```
+4. **Commit your changes** with descriptive messages:
+   ```bash
+   git commit -m 'Add some amazing feature'
+   ```
+5. **Push to your fork**:
+   ```bash
+   git push origin feature/amazing-feature
+   ```
+6. **Open a Pull Request** targeting the `dev` branch
+
+### Pull Request Guidelines
+
+- **Target Branch**: Always target `dev` branch for new features
+- **Tests Required**: All tests must pass (CI will verify this)
+- **Code Quality**: Must pass linting checks
+- **Description**: Provide clear description of changes
+- **Small PRs**: Keep pull requests focused and reasonably sized
+
+### Release Process
+
+- **Feature Development**: `feature/xyz` → `dev` → merge after CI passes
+- **Releases**: `dev` → `main` → create release tag
+- **Hotfixes**: `hotfix/xyz` → `main` → backport to `dev`
 
 ## Known Issues and Solutions
 
