@@ -364,12 +364,19 @@ Both `main` and `dev` branches are protected with the following requirements:
 
 1. Go to **Settings** → **Branches** in your GitHub repository
 2. Add protection rules for `main` and `dev` branches:
-   - ✅ Require status checks to pass before merging
-   - ✅ Require branches to be up to date before merging
-   - ✅ Select "Python package" as required status check
-   - ✅ Require pull request reviews before merging
-   - ✅ Dismiss stale reviews when new commits are pushed
-   - ✅ Restrict pushes that create files larger than 100MB
+   - ✅ **Require status checks to pass before merging**
+   - ✅ **Require branches to be up to date before merging**
+   - ✅ **Select specific status checks** (critical for preventing queued merges):
+     - `All Tests Complete` (summary job that ensures all tests pass)
+     - `Test Python 3.9` (individual test jobs)
+     - `Test Python 3.10`
+     - `Test Python 3.11`
+   - ✅ **Require pull request reviews before merging**
+   - ✅ **Dismiss stale reviews when new commits are pushed**
+   - ✅ **Do not allow bypassing the above settings**
+   - ✅ **Restrict pushes that create files larger than 100MB**
+
+**🔑 Key Fix**: Select **specific status checks** rather than just the general "Python package" workflow. This prevents merging while checks are queued/running.
 
 ## Contributing
 
