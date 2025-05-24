@@ -79,6 +79,177 @@ def export_repositories(repos: List[Repository], output_file: str) -> None:
             f.write(f"{repo.full_name}\n")
 
 
+def read_repository_list(file_path: str) -> List[str]:
+    """Read repository names from a text file, one per line."""
+    try:
+        with open(file_path, 'r') as f:
+            # Strip whitespace and filter out empty lines
+            return [line.strip() for line in f if line.strip()]
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Repository list file not found: {file_path}")
+    except Exception as e:
+        raise Exception(f"Error reading repository list file: {e}")
+
+
+def get_repository_status(github_client: Github, repo_name: str) -> str:
+    """Get the current status of a repository."""
+    try:
+        repo = github_client.get_repo(repo_name)
+        if repo.archived:
+            return "Already Archived"
+        else:
+            return "Active"
+    except GithubException as e:
+        if "Not Found" in str(e):
+            return "Not Found"
+        elif "permission" in str(e).lower() or "403" in str(e):
+            return "No Permission"
+        else:
+            return "Error"
+    except Exception:
+        return "Unknown"
+
+
+def create_operation_preview_table(repo_statuses: List[dict], operation: str) -> Table:
+    """Create a table showing the planned operations on repositories."""
+    table = Table(title=f"Planned Operation: {operation.upper()}")
+    table.add_column("Repository", style="cyan")
+    table.add_column("Current Status", style="yellow")
+    table.add_column("Planned Action", style="red" if operation == "delete" else "magenta")
+    
+    for repo_info in repo_statuses:
+        repo_name = repo_info["name"]
+        status = repo_info["status"]
+        
+        # Determine planned action based on current status
+        if operation == "delete":
+            if status in ["Not Found", "No Permission", "Error"]:
+                action_desc = "CANNOT DELETE"
+            else:
+                action_desc = "DELETE (irreversible)"
+        else:  # archive
+            if status == "Already Archived":
+                action_desc = "NO CHANGE NEEDED"
+            elif status in ["Not Found", "No Permission", "Error"]:
+                action_desc = "CANNOT ARCHIVE"
+            else:
+                action_desc = "ARCHIVE (reversible)"
+        
+        # Color code the status
+        if status in ["Not Found", "No Permission", "Error"]:
+            status_display = f"[red]{status}[/red]"
+        elif status == "Already Archived":
+            status_display = f"[dim]{status}[/dim]"
+        else:
+            status_display = f"[green]{status}[/green]"
+        
+        table.add_row(repo_name, status_display, action_desc)
+    
+    return table
+
+
+def create_operation_results_table(results: List[dict]) -> Table:
+    """Create a table showing the results of repository operations."""
+    table = Table(title="Operation Results")
+    table.add_column("Repository", style="cyan")
+    table.add_column("Operation", style="yellow")
+    table.add_column("Status", style="green")
+    table.add_column("Details")
+    
+    for result in results:
+        status_style = "green" if result["success"] else "red"
+        status_text = "SUCCESS" if result["success"] else "FAILED"
+        table.add_row(
+            result["repo_name"],
+            result["operation"].upper(),
+            f"[{status_style}]{status_text}[/{status_style}]",
+            result["details"]
+        )
+    
+    return table
+
+
+def confirm_operation(operation: str, repo_count: int) -> bool:
+    """Ask user to confirm the operation before proceeding."""
+    action_desc = "DELETE (IRREVERSIBLE)" if operation == "delete" else "ARCHIVE"
+    
+    console.print(f"\n[bold red]WARNING:[/] You are about to {action_desc} {repo_count} repositories.")
+    if operation == "delete":
+        console.print("[bold red]DELETION IS IRREVERSIBLE - repositories cannot be recovered![/]")
+    
+    while True:
+        response = input(f"\nType 'yes' to {operation} these repositories, or 'no' to cancel: ").lower().strip()
+        if response in ['yes', 'y']:
+            return True
+        elif response in ['no', 'n', '']:
+            return False
+        else:
+            console.print("Please type 'yes' or 'no'")
+
+
+def perform_repository_operation(github_client: Github, repo_name: str, operation: str) -> dict:
+    """Perform archive or delete operation on a single repository."""
+    try:
+        repo = github_client.get_repo(repo_name)
+        
+        if operation == "archive":
+            if repo.archived:
+                return {
+                    "repo_name": repo_name,
+                    "operation": operation,
+                    "success": True,
+                    "details": "Already archived"
+                }
+            repo.edit(archived=True)
+            return {
+                "repo_name": repo_name,
+                "operation": operation,
+                "success": True,
+                "details": "Successfully archived"
+            }
+        
+        elif operation == "delete":
+            repo.delete()
+            return {
+                "repo_name": repo_name,
+                "operation": operation,
+                "success": True,
+                "details": "Successfully deleted"
+            }
+        
+        else:
+            return {
+                "repo_name": repo_name,
+                "operation": operation,
+                "success": False,
+                "details": f"Unknown operation: {operation}"
+            }
+    
+    except GithubException as e:
+        error_msg = str(e)
+        if "Not Found" in error_msg:
+            details = "Repository not found or no access"
+        elif "permission" in error_msg.lower():
+            details = "Insufficient permissions"
+        else:
+            details = f"GitHub error: {error_msg}"
+        
+        return {
+            "repo_name": repo_name,
+            "operation": operation,
+            "success": False,
+            "details": details
+        }
+    
+    except Exception as e:
+        return {
+            "repo_name": repo_name,
+            "operation": operation,
+            "success": False,
+            "details": f"Unexpected error: {str(e)}"
+        }
+
+
 def create_repository_table(repos: List[Repository], filter_desc: str, username: Optional[str] = None, full_names: bool = False) -> Table:
     """Create and populate a table with repository information."""
     if username:
@@ -208,6 +379,98 @@ def public(username: str, repo_filter: str, export_file: Optional[str], full_nam
             console.print(f"[bold red]Error:[/] User '{username}' not found.")
         else:
             console.print(f"[bold red]GitHub Error:[/] {e}")
+    except Exception as e:
+        console.print(f"[bold red]Error:[/] {e}")
+
+
+@cli.command()
+@click.argument("file_path", type=click.Path(exists=True))
+@click.argument("operation", type=click.Choice(["archive", "delete"]))
+def manage(file_path: str, operation: str):
+    """Manage repositories by performing archive or delete operations.
+    
+    FILE_PATH: Path to text file containing repository names (owner/repo format)
+    OPERATION: Operation to perform (archive or delete)
+    """
+    try:
+        # Read repository list from file
+        repo_names = read_repository_list(file_path)
+        
+        if not repo_names:
+            console.print("[bold red]Error:[/] No repositories found in the file.")
+            return
+        
+        console.print(f"Found {len(repo_names)} repositories in {file_path}")
+        
+        # Check repository statuses
+        console.print(f"\n[bold]Checking repository statuses...[/]")
+        g = init_github_client()
+        
+        repo_statuses = []
+        for i, repo_name in enumerate(repo_names, 1):
+            console.print(f"[{i}/{len(repo_names)}] Checking {repo_name}...", end="")
+            status = get_repository_status(g, repo_name)
+            repo_statuses.append({"name": repo_name, "status": status})
+            console.print(f" {status}")
+        
+        # Show preview table
+        preview_table = create_operation_preview_table(repo_statuses, operation)
+        console.print("\n")
+        console.print(preview_table)
+        
+        # Count actionable repositories
+        actionable_repos = []
+        for repo_info in repo_statuses:
+            status = repo_info["status"]
+            if operation == "archive":
+                if status not in ["Already Archived", "Not Found", "No Permission", "Error"]:
+                    actionable_repos.append(repo_info["name"])
+            else:  # delete
+                if status not in ["Not Found", "No Permission", "Error"]:
+                    actionable_repos.append(repo_info["name"])
+        
+        if not actionable_repos:
+            console.print(f"[yellow]No repositories can be {operation}d. All repositories are either already processed or inaccessible.[/]")
+            return
+        
+        if len(actionable_repos) < len(repo_names):
+            skipped = len(repo_names) - len(actionable_repos)
+            console.print(f"[yellow]Note: {skipped} repositories will be skipped due to status or permissions.[/]")
+        
+        # Ask for confirmation
+        if not confirm_operation(operation, len(actionable_repos)):
+            console.print("[yellow]Operation cancelled.[/]")
+            return
+        
+        # Perform operations
+        console.print(f"\n[bold]Starting {operation} operations...[/]")
+        results = []
+        
+        for i, repo_name in enumerate(repo_names, 1):
+            console.print(f"[{i}/{len(repo_names)}] Processing {repo_name}...")
+            result = perform_repository_operation(g, repo_name, operation)
+            results.append(result)
+            
+            # Show immediate feedback
+            if result["success"]:
+                console.print(f"  [green]✓[/] {result['details']}")
+            else:
+                console.print(f"  [red]✗[/] {result['details']}")
+        
+        # Show final results table
+        console.print("\n[bold]Operation Summary:[/]")
+        results_table = create_operation_results_table(results)
+        console.print(results_table)
+        
+        # Summary statistics
+        successful = sum(1 for r in results if r["success"])
+        failed = len(results) - successful
+        
+        console.print(f"\n[bold]Results:[/] {successful} successful, {failed} failed")
+        
+        if failed > 0:
+            console.print("[yellow]Some operations failed. Check the details above for more information.[/]")
+        
     except Exception as e:
         console.print(f"[bold red]Error:[/] {e}")
 
