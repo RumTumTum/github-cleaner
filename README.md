@@ -27,10 +27,16 @@ A Python CLI tool to manage GitHub repositories efficiently. Clean up your GitHu
   - Same filtering options (all, active, archived) available for export
   - Seamless integration with existing list and public commands via `--export` flag
 
+- **Repository Management**: Archive and delete your repositories safely:
+  - Batch operations on multiple repositories from exported lists
+  - Preview changes before execution with confirmation prompts
+  - Safe one-by-one processing with detailed success/failure reporting
+  - Archive operations (reversible) and delete operations (irreversible)
+  - Works only with your own repositories (authentication required)
+
 ### Coming Soon
 
-- **Single Repository Management**: Archive or delete individual repositories via CLI
-- **Batch Operations**: Process multiple repositories from a text file
+- **Single Repository Management**: Archive or delete individual repositories via CLI arguments
 
 ## Installation
 
@@ -182,6 +188,39 @@ owner/repository-name-2
 owner/repository-name-3
 ```
 
+### Managing Repositories (Archive/Delete)
+
+Perform batch operations on your repositories using exported lists. **Requires authentication and only works with your own repositories.**
+
+```bash
+# First, export repositories to manage
+python main.py list --filter archived --export old-repos.txt
+
+# Archive repositories (reversible)
+python main.py manage old-repos.txt archive
+
+# Delete repositories (IRREVERSIBLE - use with caution!)
+python main.py manage unwanted-repos.txt delete
+
+# You can also manage repositories from any exported list
+python main.py list --export all-repos.txt
+python main.py manage all-repos.txt archive
+```
+
+**⚠️ Important Safety Notes:**
+- **Preview Required**: Always shows preview table before execution
+- **User Confirmation**: Must explicitly type 'yes' to proceed
+- **Delete Warning**: Extra warnings for irreversible delete operations
+- **One-by-One Processing**: Failed repositories don't stop the entire operation
+- **Your Repos Only**: Only works with repositories you own or have admin access to
+
+**File Format**: Use the same format as export output (`owner/repo` per line):
+```
+username/repo-to-archive
+username/repo-to-delete
+username/another-repo
+```
+
 ### Help
 
 ```bash
@@ -191,6 +230,7 @@ python main.py --help
 # Display help for a specific command
 python main.py list --help
 python main.py public --help
+python main.py manage --help
 ```
 
 ## Examples
@@ -281,6 +321,68 @@ $ python main.py public octocat --filter active --full-names
 └────────────────────────────┴────────────┴────────┴───────────────────────────┘
 ```
 
+### Managing repositories with preview and confirmation
+
+Complete workflow showing archive operation with safety features:
+
+```bash
+# Step 1: Export repositories to manage
+$ python main.py list --filter archived --export archived-repos.txt
+Success: Exported 5 archived repositories to archived-repos.txt
+
+# Step 2: Review the file contents
+$ cat archived-repos.txt
+username/old-project-1
+username/legacy-code
+username/deprecated-tool
+username/test-repository
+username/archived-demo
+
+# Step 3: Run manage command with preview
+$ python main.py manage archived-repos.txt archive
+Found 5 repositories in archived-repos.txt
+                   Planned Operation: ARCHIVE                    
+┏━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Repository            ┃ Current Status ┃ Planned Action       ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
+│ username/old-project-1│ Unknown        │ ARCHIVE (reversible) │
+│ username/legacy-code  │ Unknown        │ ARCHIVE (reversible) │
+│ username/deprecated-tool│ Unknown      │ ARCHIVE (reversible) │
+│ username/test-repository│ Unknown      │ ARCHIVE (reversible) │
+│ username/archived-demo│ Unknown        │ ARCHIVE (reversible) │
+└───────────────────────┴────────────────┴──────────────────────┘
+
+WARNING: You are about to ARCHIVE 5 repositories.
+
+Type 'yes' to archive these repositories, or 'no' to cancel: yes
+
+Starting archive operations...
+[1/5] Processing username/old-project-1...
+  ✓ Already archived
+[2/5] Processing username/legacy-code...
+  ✓ Successfully archived
+[3/5] Processing username/deprecated-tool...
+  ✗ Repository not found or no access
+[4/5] Processing username/test-repository...
+  ✓ Successfully archived
+[5/5] Processing username/archived-demo...
+  ✓ Already archived
+
+Operation Summary:
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Repository                ┃ Operation ┃ Status  ┃ Details                          ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ username/old-project-1    │ ARCHIVE   │ SUCCESS │ Already archived                 │
+│ username/legacy-code      │ ARCHIVE   │ SUCCESS │ Successfully archived           │
+│ username/deprecated-tool  │ ARCHIVE   │ FAILED  │ Repository not found or no access│
+│ username/test-repository  │ ARCHIVE   │ SUCCESS │ Successfully archived           │
+│ username/archived-demo    │ ARCHIVE   │ SUCCESS │ Already archived                 │
+└───────────────────────────┴───────────┴─────────┴──────────────────────────────────┘
+
+Results: 4 successful, 1 failed
+Some operations failed. Check the details above for more information.
+```
+
 ## Development
 
 ### Setting up a development environment
@@ -317,6 +419,7 @@ pytest tests/test_list_repos.py      # Tests for authenticated repository listin
 pytest tests/test_public_repos.py   # Tests for public repository discovery
 pytest tests/test_export_repos.py   # Tests for export functionality (--export flag)
 pytest tests/test_full_names.py     # Tests for full names display (--full-names flag)
+pytest tests/test_manage.py         # Tests for repository management (archive/delete)
 
 # Run with coverage report (requires pytest-cov)
 pytest --cov=main
@@ -328,13 +431,15 @@ The test suite covers:
 - **Authenticated Operations**: Repository listing with filtering (all, active, archived)
 - **Public Repository Discovery**: Unauthenticated access to any user's public repos
 - **Repository Export**: Export functionality via `--export` flag for both list and public commands
+- **Repository Management**: Archive and delete operations with comprehensive safety testing
 - **Display Options**: Full names display via `--full-names` flag for both list and public commands
-- **File Operations**: Export file creation, content validation, permission error handling
-- **Data Format Validation**: Ensuring full repository names (`owner/repo`) in export files
+- **File Operations**: Export file creation, repository list reading, permission error handling
+- **Data Format Validation**: Ensuring full repository names (`owner/repo`) in export and manage files
 - **UI/Display Testing**: Verification of table output formats and content display
+- **Safety Features**: User confirmation, preview tables, operation results reporting
 - **Flag Combinations**: Testing interactions between filters, export, and display options
-- **Error Handling**: GitHub API errors, user not found, network issues, file system errors
-- **Edge Cases**: Empty repository lists, various filter combinations, mixed repository types
+- **Error Handling**: GitHub API errors, user not found, network issues, file system errors, permission issues
+- **Edge Cases**: Empty repository lists, various filter combinations, mixed repository types, failed operations
 
 ## Continuous Integration
 
