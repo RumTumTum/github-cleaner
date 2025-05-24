@@ -176,3 +176,4 @@ cython_debug/
 # Claude guidance file
 CLAUDE.md
 output_files/
+input_files/
