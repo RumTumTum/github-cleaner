@@ -316,7 +316,7 @@ $ github-cleaner public octocat --filter active
 │ hello-worId        │ Public     │ Active │ My first repository on GitHub.    │
 │ Hello-World        │ Public     │ Active │ My first repository on GitHub!    │
 │ linguist           │ Public     │ Active │ Language Savant. If your          │
-│                    │            │        │ repository's language is being    │
+│                    │            │        │ repository language is being      │
 │                    │            │        │ reported incorrectly, send us a   │
 │                    │            │        │ pull request!                     │
 │ octocat.github.io  │ Public     │ Active │                                   │
