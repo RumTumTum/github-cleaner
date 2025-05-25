@@ -325,7 +325,7 @@ $ github-cleaner public octocat --filter active
 │ test-repo1         │ Public     │ Active │                                   │
 └────────────────────┴────────────┴────────┴───────────────────────────────────┘
 
-Total public repositories: 8
+Total active public repositories: 8
 ```
 
 ### Exporting repository lists
