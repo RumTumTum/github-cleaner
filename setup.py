@@ -14,7 +14,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="Your Name",
-    author_email="your.email@example.com",
+    author_email="github-cleaner@ostad.io",
     url="https://github.com/yourusername/github-cleaner",
     packages=find_packages(),
     include_package_data=True,
