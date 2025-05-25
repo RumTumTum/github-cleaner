@@ -1,10 +1,27 @@
 # GitHub Cleaner
 
+[![PyPI version](https://img.shields.io/pypi/v/github-cleaner.svg)](https://pypi.org/project/github-cleaner/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Python package](https://github.com/yourusername/github-cleaner/actions/workflows/python-package.yml/badge.svg)](https://github.com/yourusername/github-cleaner/actions/workflows/python-package.yml)
-[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 
 A Python CLI tool to manage GitHub repositories efficiently. Clean up your GitHub account by viewing, exporting, archiving, and deleting repositories with ease.
+
+## Package Structure
+
+```
+github_cleaner/
+├── __init__.py      # Package initialization and version exports
+├── __version__.py   # Version management
+├── cli.py          # Click-based command-line interface
+└── core.py         # Core GitHub operations and utilities
+```
+
+The package is structured as a proper Python package with:
+- **Modular design**: Separation of CLI logic from core functionality
+- **Entry point**: `github-cleaner` command available after installation
+- **Version management**: Centralized version handling for PyPI releases
+- **Clean imports**: Well-defined module boundaries and imports
 
 ## Features
 
@@ -45,7 +62,14 @@ A Python CLI tool to manage GitHub repositories efficiently. Clean up your GitHu
 - Python 3.8 or higher
 - GitHub Personal Access Token with appropriate permissions
 
-### Option 1: Install from source
+### Option 1: Install from PyPI (Recommended)
+
+```bash
+# Install the latest stable version
+pip install github-cleaner
+```
+
+### Option 2: Install from source
 
 ```bash
 # Clone the repository
@@ -56,7 +80,7 @@ cd github-cleaner
 pip install -r requirements.txt
 ```
 
-### Option 2: Development installation
+### Option 3: Development installation
 
 ```bash
 # Clone the repository
@@ -123,38 +147,38 @@ For persistent storage, add the export command to your shell profile file (e.g.,
 
 ```bash
 # List all repositories
-python main.py list
+github-cleaner list
 
 # List only active (non-archived) repositories
-python main.py list --filter active
+github-cleaner list --filter active
 
 # List only archived repositories
-python main.py list --filter archived
+github-cleaner list --filter archived
 
 # Show full repository names (owner/repo format)
-python main.py list --full-names
+github-cleaner list --full-names
 
 # Combine filters with full names
-python main.py list --filter active --full-names
+github-cleaner list --filter active --full-names
 ```
 
 ### Viewing Public Repositories (No Token Required)
 
 ```bash
 # View all public repositories for a user
-python main.py public username
+github-cleaner public username
 
 # View only active public repositories for a user
-python main.py public username --filter active
+github-cleaner public username --filter active
 
 # View only archived public repositories for a user
-python main.py public username --filter archived
+github-cleaner public username --filter archived
 
 # Show full repository names (owner/repo format)
-python main.py public username --full-names
+github-cleaner public username --full-names
 
 # Combine filters with full names
-python main.py public username --filter active --full-names
+github-cleaner public username --filter active --full-names
 ```
 
 ### Exporting Repository Lists
@@ -163,22 +187,22 @@ Export repository names to text files for further processing. All exports use th
 
 ```bash
 # Export all your repositories
-python main.py list --export my-repos.txt
+github-cleaner list --export my-repos.txt
 
 # Export only active repositories
-python main.py list --filter active --export active-repos.txt
+github-cleaner list --filter active --export active-repos.txt
 
 # Export only archived repositories  
-python main.py list --filter archived --export archived-repos.txt
+github-cleaner list --filter archived --export archived-repos.txt
 
 # Export all public repositories for a user
-python main.py public octocat --export octocat-repos.txt
+github-cleaner public octocat --export octocat-repos.txt
 
 # Export only active public repositories for a user
-python main.py public octocat --filter active --export octocat-active.txt
+github-cleaner public octocat --filter active --export octocat-active.txt
 
 # Note: --full-names flag doesn't affect export format
-python main.py list --full-names --export repos.txt  # Still exports owner/repo format
+github-cleaner list --full-names --export repos.txt  # Still exports owner/repo format
 ```
 
 **Export File Format:**
@@ -194,17 +218,17 @@ Perform batch operations on your repositories using exported lists. **Requires a
 
 ```bash
 # First, export repositories to manage
-python main.py list --filter archived --export old-repos.txt
+github-cleaner list --filter archived --export old-repos.txt
 
 # Archive repositories (reversible)
-python main.py manage old-repos.txt archive
+github-cleaner manage old-repos.txt archive
 
 # Delete repositories (IRREVERSIBLE - use with caution!)
-python main.py manage unwanted-repos.txt delete
+github-cleaner manage unwanted-repos.txt delete
 
 # You can also manage repositories from any exported list
-python main.py list --export all-repos.txt
-python main.py manage all-repos.txt archive
+github-cleaner list --export all-repos.txt
+github-cleaner manage all-repos.txt archive
 ```
 
 **⚠️ Important Safety Notes:**
@@ -225,12 +249,12 @@ username/another-repo
 
 ```bash
 # Display help for all commands
-python main.py --help
+github-cleaner --help
 
 # Display help for a specific command
-python main.py list --help
-python main.py public --help
-python main.py manage --help
+github-cleaner list --help
+github-cleaner public --help
+github-cleaner manage --help
 ```
 
 ## Examples
@@ -238,7 +262,7 @@ python main.py manage --help
 ### Viewing all repositories
 
 ```bash
-$ python main.py list
+$ github-cleaner list
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃                                                                 All GitHub Repositories                                                                 ┃
 ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
@@ -254,7 +278,7 @@ Total repositories: 3
 ### Viewing someone's public repositories
 
 ```bash
-$ python main.py public octocat --filter active
+$ github-cleaner public octocat --filter active
                     Active Public Repositories for @octocat                     
 ┏━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ Name               ┃ Visibility ┃ Status ┃ Description                       ┃
@@ -280,7 +304,7 @@ Total public repositories: 8
 ### Exporting repository lists
 
 ```bash
-$ python main.py public octocat --filter active --export octocat-repos.txt
+$ github-cleaner public octocat --filter active --export octocat-repos.txt
 Success: Exported 8 active public repositories for @octocat to octocat-repos.txt
 
 $ cat octocat-repos.txt
@@ -300,7 +324,7 @@ Compare the difference between default display and full names display:
 
 ```bash
 # Default display (just repository names)
-$ python main.py public octocat --filter active
+$ github-cleaner public octocat --filter active
                     Active Public Repositories for @octocat                     
 ┏━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ Name               ┃ Visibility ┃ Status ┃ Description                       ┃
@@ -310,7 +334,7 @@ $ python main.py public octocat --filter active
 └────────────────────┴────────────┴────────┴───────────────────────────────────┘
 
 # Full names display (owner/repo format)
-$ python main.py public octocat --filter active --full-names
+$ github-cleaner public octocat --filter active --full-names
                     Active Public Repositories for @octocat                     
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ Name                       ┃ Visibility ┃ Status ┃ Description               ┃
@@ -327,7 +351,7 @@ Complete workflow showing archive operation with safety features:
 
 ```bash
 # Step 1: Export repositories to manage
-$ python main.py list --filter archived --export archived-repos.txt
+$ github-cleaner list --filter archived --export archived-repos.txt
 Success: Exported 5 archived repositories to archived-repos.txt
 
 # Step 2: Review the file contents
@@ -339,7 +363,7 @@ username/test-repository
 username/archived-demo
 
 # Step 3: Run manage command with preview
-$ python main.py manage archived-repos.txt archive
+$ github-cleaner manage archived-repos.txt archive
 Found 5 repositories in archived-repos.txt
                    Planned Operation: ARCHIVE                    
 ┏━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
@@ -403,6 +427,9 @@ source venv/bin/activate
 
 # Install development dependencies
 pip install -e ".[dev]"
+
+# Verify installation
+github-cleaner --help
 ```
 
 ### Running tests
@@ -422,7 +449,13 @@ pytest tests/test_full_names.py     # Tests for full names display (--full-names
 pytest tests/test_manage.py         # Tests for repository management (archive/delete)
 
 # Run with coverage report (requires pytest-cov)
-pytest --cov=main
+pytest --cov=github_cleaner
+
+# Run linting on the package
+flake8 github_cleaner
+
+# Run type checking on the package
+mypy github_cleaner
 ```
 
 ### Test Coverage
@@ -482,6 +515,49 @@ Both `main` and `dev` branches are protected with the following requirements:
    - ✅ **Restrict pushes that create files larger than 100MB**
 
 **🔑 Key Fix**: Select **specific status checks** rather than just the general "Python package" workflow. This prevents merging while checks are queued/running.
+
+## Publishing to PyPI
+
+### Prerequisites for Publishing
+
+- Ensure you have `build` and `twine` installed:
+  ```bash
+  pip install build twine
+  ```
+- Create accounts on [PyPI](https://pypi.org) and [TestPyPI](https://test.pypi.org)
+- Configure your API tokens for secure uploads
+
+### Build and Publish Process
+
+```bash
+# 1. Update version in github_cleaner/__version__.py
+# 2. Clean previous builds
+rm -rf dist/ build/ *.egg-info/
+
+# 3. Build the package
+python -m build
+
+# 4. Check the build
+twine check dist/*
+
+# 5. Upload to TestPyPI first (recommended)
+twine upload --repository testpypi dist/*
+
+# 6. Test install from TestPyPI
+pip install --index-url https://test.pypi.org/simple/ github-cleaner
+
+# 7. If everything works, upload to PyPI
+twine upload dist/*
+```
+
+### Version Management
+
+Update the version in `github_cleaner/__version__.py` before each release:
+```python
+__version__ = "0.2.0"  # Update this for new releases
+```
+
+The version is automatically read by `setup.py` during the build process.
 
 ## Contributing
 
