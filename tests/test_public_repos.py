@@ -7,7 +7,7 @@ from click.testing import CliRunner
 # Add the parent directory to the path so we can import main
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from main import cli
+from github_cleaner.cli import cli
 
 # Create a mock for GitHub Repository objects
 class MockRepository:
@@ -25,7 +25,7 @@ class TestPublicRepositories(unittest.TestCase):
     def setUp(self):
         self.runner = CliRunner()
     
-    @patch('main.Github')
+    @patch('github_cleaner.core.Github')
     def test_public_repos_all(self, mock_github):
         # Set up mock repos
         mock_repo1 = MockRepository(
@@ -74,7 +74,7 @@ class TestPublicRepositories(unittest.TestCase):
         expected_repos = [mock_repo1, mock_repo2]
         self.assertIn(f'Total public repositories: {len(expected_repos)}', result.output)
 
-    @patch('main.Github')
+    @patch('github_cleaner.core.Github')
     def test_public_repos_active_filter(self, mock_github):
         # Set up mock repos
         mock_repo1 = MockRepository(
@@ -114,7 +114,7 @@ class TestPublicRepositories(unittest.TestCase):
         active_repos = [repo for repo in [mock_repo1, mock_repo2] if not repo.archived]
         self.assertIn(f'Total public repositories: {len(active_repos)}', result.output)
 
-    @patch('main.Github')
+    @patch('github_cleaner.core.Github')
     def test_public_repos_archived_filter(self, mock_github):
         # Set up mock repos
         mock_repo1 = MockRepository(
@@ -154,7 +154,7 @@ class TestPublicRepositories(unittest.TestCase):
         archived_repos = [repo for repo in [mock_repo1, mock_repo2] if repo.archived]
         self.assertIn(f'Total public repositories: {len(archived_repos)}', result.output)
 
-    @patch('main.Github')
+    @patch('github_cleaner.core.Github')
     def test_public_repos_user_not_found(self, mock_github):
         # Setup GitHub to raise a "Not Found" exception
         from github import GithubException
@@ -173,7 +173,7 @@ class TestPublicRepositories(unittest.TestCase):
         # Verify specific user not found error was printed
         self.assertIn("User 'nonexistentuser' not found", result.output)
 
-    @patch('main.Github')
+    @patch('github_cleaner.core.Github')
     def test_public_repos_github_exception(self, mock_github):
         # Setup GitHub to raise a general exception
         from github import GithubException
@@ -192,7 +192,7 @@ class TestPublicRepositories(unittest.TestCase):
         # Verify GitHub error was printed
         self.assertIn('GitHub Error', result.output)
 
-    @patch('main.Github')
+    @patch('github_cleaner.core.Github')
     def test_public_repos_no_repositories(self, mock_github):
         # Set up mock user with no repositories
         mock_user = MagicMock()
