@@ -8,7 +8,8 @@ from click.testing import CliRunner
 # Add the parent directory to the path so we can import main
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from main import cli, read_repository_list, perform_repository_operation, get_repository_status
+from github_cleaner.cli import cli
+from github_cleaner.core import read_repository_list, perform_repository_operation, get_repository_status
 
 # Create a mock for GitHub Repository objects
 class MockRepository:
@@ -62,8 +63,8 @@ class TestManageCommand(unittest.TestCase):
         finally:
             os.unlink(temp_filename)
     
-    @patch('main.Github')
-    @patch('main.get_github_token', return_value='fake-token')
+    @patch('github_cleaner.core.Github')
+    @patch('github_cleaner.core.get_github_token', return_value='fake-token')
     def test_perform_archive_operation_success(self, mock_get_token, mock_github):
         """Test successful archive operation."""
         # Set up mock repository
@@ -79,8 +80,8 @@ class TestManageCommand(unittest.TestCase):
         self.assertIn("Successfully archived", result["details"])
         self.assertTrue(mock_repo.archived)
     
-    @patch('main.Github')
-    @patch('main.get_github_token', return_value='fake-token')
+    @patch('github_cleaner.core.Github')
+    @patch('github_cleaner.core.get_github_token', return_value='fake-token')
     def test_perform_archive_already_archived(self, mock_get_token, mock_github):
         """Test archive operation on already archived repository."""
         # Set up mock repository that's already archived
@@ -95,8 +96,8 @@ class TestManageCommand(unittest.TestCase):
         self.assertEqual(result["operation"], "archive")
         self.assertIn("Already archived", result["details"])
     
-    @patch('main.Github')
-    @patch('main.get_github_token', return_value='fake-token')
+    @patch('github_cleaner.core.Github')
+    @patch('github_cleaner.core.get_github_token', return_value='fake-token')
     def test_perform_delete_operation_success(self, mock_get_token, mock_github):
         """Test successful delete operation."""
         # Set up mock repository
@@ -111,8 +112,8 @@ class TestManageCommand(unittest.TestCase):
         self.assertEqual(result["operation"], "delete")
         self.assertIn("Successfully deleted", result["details"])
     
-    @patch('main.Github')
-    @patch('main.get_github_token', return_value='fake-token')
+    @patch('github_cleaner.core.Github')
+    @patch('github_cleaner.core.get_github_token', return_value='fake-token')
     def test_perform_operation_repo_not_found(self, mock_get_token, mock_github):
         """Test operation on non-existent repository."""
         from github import GithubException
@@ -129,8 +130,8 @@ class TestManageCommand(unittest.TestCase):
         self.assertEqual(result["operation"], "archive")
         self.assertIn("Repository not found", result["details"])
     
-    @patch('main.Github')
-    @patch('main.get_github_token', return_value='fake-token')
+    @patch('github_cleaner.core.Github')
+    @patch('github_cleaner.core.get_github_token', return_value='fake-token')
     def test_perform_operation_permission_error(self, mock_get_token, mock_github):
         """Test operation with insufficient permissions."""
         from github import GithubException
@@ -171,9 +172,9 @@ class TestManageCommand(unittest.TestCase):
         finally:
             os.unlink(temp_filename)
     
-    @patch('main.get_repository_status', return_value="Active")
-    @patch('main.init_github_client')
-    @patch('main.confirm_operation', return_value=False)
+    @patch('github_cleaner.cli.get_repository_status', return_value="Active")
+    @patch('github_cleaner.cli.init_github_client')
+    @patch('github_cleaner.cli.confirm_operation', return_value=False)
     def test_manage_command_user_cancels(self, mock_confirm, mock_github_client, mock_status):
         """Test manage command when user cancels operation."""
         # Create temporary file
@@ -191,10 +192,10 @@ class TestManageCommand(unittest.TestCase):
         finally:
             os.unlink(temp_filename)
     
-    @patch('main.get_repository_status', return_value="Active")
-    @patch('main.perform_repository_operation')
-    @patch('main.init_github_client')
-    @patch('main.confirm_operation', return_value=True)
+    @patch('github_cleaner.cli.get_repository_status', return_value="Active")
+    @patch('github_cleaner.cli.perform_repository_operation')
+    @patch('github_cleaner.cli.init_github_client')
+    @patch('github_cleaner.cli.confirm_operation', return_value=True)
     def test_manage_command_successful_operations(self, mock_confirm, mock_github_client, mock_perform_op, mock_status):
         """Test manage command with successful operations."""
         # Set up mocks
@@ -221,10 +222,11 @@ class TestManageCommand(unittest.TestCase):
         finally:
             os.unlink(temp_filename)
     
-    @patch('main.perform_repository_operation')
-    @patch('main.init_github_client')
-    @patch('main.confirm_operation', return_value=True)
-    def test_manage_command_mixed_results(self, mock_confirm, mock_github_client, mock_perform_op):
+    @patch('github_cleaner.cli.get_repository_status', return_value="Active")
+    @patch('github_cleaner.cli.perform_repository_operation')
+    @patch('github_cleaner.cli.init_github_client')
+    @patch('github_cleaner.cli.confirm_operation', return_value=True)
+    def test_manage_command_mixed_results(self, mock_confirm, mock_github_client, mock_perform_op, mock_status):
         """Test manage command with mixed success/failure results."""
         # Set up mocks with mixed results
         mock_perform_op.side_effect = [

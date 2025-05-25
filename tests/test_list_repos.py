@@ -8,7 +8,7 @@ from click.testing import CliRunner
 # Add the parent directory to the path so we can import main
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from main import cli
+from github_cleaner.cli import cli
 
 # Create a better mock for GitHub Repository objects
 class MockRepository:
@@ -26,8 +26,8 @@ class TestListRepositories(unittest.TestCase):
     def setUp(self):
         self.runner = CliRunner()
     
-    @patch('main.Github')
-    @patch('main.get_github_token', return_value='fake-token')
+    @patch('github_cleaner.core.Github')
+    @patch('github_cleaner.core.get_github_token', return_value='fake-token')
     def test_list_all_repos(self, mock_get_token, mock_github):
         # Set up mock repos using our custom MockRepository class
         mock_repo1 = MockRepository(
@@ -69,8 +69,8 @@ class TestListRepositories(unittest.TestCase):
         self.assertIn('repo1', result.output)
         self.assertIn('repo2', result.output)
 
-    @patch('main.Github')
-    @patch('main.get_github_token', return_value='fake-token')
+    @patch('github_cleaner.core.Github')
+    @patch('github_cleaner.core.get_github_token', return_value='fake-token')
     def test_list_active_repos(self, mock_get_token, mock_github):
         # Set up mock repos using our custom MockRepository class
         mock_repo1 = MockRepository(
@@ -104,8 +104,8 @@ class TestListRepositories(unittest.TestCase):
         # Check if only the active repository is in the output
         self.assertIn('repo1', result.output)
 
-    @patch('main.Github')
-    @patch('main.get_github_token', return_value='fake-token')
+    @patch('github_cleaner.core.Github')
+    @patch('github_cleaner.core.get_github_token', return_value='fake-token')
     def test_list_archived_repos(self, mock_get_token, mock_github):
         # Set up mock repos using our custom MockRepository class
         mock_repo1 = MockRepository(
@@ -139,8 +139,8 @@ class TestListRepositories(unittest.TestCase):
         # Check if only the archived repository is in the output
         self.assertIn('repo2', result.output)
 
-    @patch('main.Github')
-    @patch('main.get_github_token', return_value='fake-token')
+    @patch('github_cleaner.core.Github')
+    @patch('github_cleaner.core.get_github_token', return_value='fake-token')
     def test_handle_github_exception(self, mock_get_token, mock_github):
         # Setup GitHub to raise an exception
         from github import GithubException
