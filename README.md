@@ -396,11 +396,11 @@ Found 5 repositories in archived-repos.txt
 ┏━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ Repository            ┃ Current Status ┃ Planned Action       ┃
 ┡━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
-│ username/old-project-1│ Unknown        │ ARCHIVE (reversible) │
-│ username/legacy-code  │ Unknown        │ ARCHIVE (reversible) │
-│ username/deprecated-tool│ Unknown      │ ARCHIVE (reversible) │
-│ username/test-repository│ Unknown      │ ARCHIVE (reversible) │
-│ username/archived-demo│ Unknown        │ ARCHIVE (reversible) │
+│ username/old-project-1│ Active         │ ARCHIVE (reversible) │
+│ username/legacy-code  │ Active         │ ARCHIVE (reversible) │
+│ username/deprecated-tool│ Archived     │ ARCHIVE (reversible) │
+│ username/test-repository│ Active       │ ARCHIVE (reversible) │
+│ username/archived-demo│ Archived       │ ARCHIVE (reversible) │
 └───────────────────────┴────────────────┴──────────────────────┘
 
 WARNING: You are about to ARCHIVE 5 repositories.
