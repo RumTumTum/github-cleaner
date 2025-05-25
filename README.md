@@ -2,10 +2,19 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/github-cleaner.svg)](https://pypi.org/project/github-cleaner/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Python package](https://github.com/yourusername/github-cleaner/actions/workflows/python-package.yml/badge.svg)](https://github.com/yourusername/github-cleaner/actions/workflows/python-package.yml)
+[![Python package](https://github.com/RumTumTum/github-cleaner/actions/workflows/python-package.yml/badge.svg)](https://github.com/RumTumTum/github-cleaner/actions/workflows/python-package.yml)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 
-A Python CLI tool to manage GitHub repositories efficiently. Clean up your GitHub account by viewing, exporting, archiving, and deleting repositories with ease.
+🧹 **GitHub Cleaner** - A powerful Python CLI tool for GitHub repository management
+
+Streamline your GitHub workflow with batch operations, smart filtering, and safe repository management. Perfect for developers, organizations, and anyone looking to organize their GitHub repositories efficiently.
+
+**Key Benefits:**
+- 🔍 **Smart Discovery**: View and filter repositories (yours or any public repos)
+- 📊 **Batch Operations**: Export, archive, and delete multiple repositories safely
+- 🛡️ **Safety First**: Preview operations, confirmation prompts, and detailed reporting
+- 🚀 **Zero Setup**: Works immediately after `pip install` with minimal configuration
+- 🎯 **Precision Control**: Advanced filtering by status, visibility, and ownership
 
 ## Package Structure
 
@@ -23,73 +32,91 @@ The package is structured as a proper Python package with:
 - **Version management**: Centralized version handling for PyPI releases
 - **Clean imports**: Well-defined module boundaries and imports
 
-## Features
+## ✨ Features
 
-### Implemented
+### 🎯 Core Capabilities
 
-- **Repository Listing**: View all your repositories with filtering capabilities:
-  - List all repositories with key information (name, visibility, status, description)
-  - Filter by repository status (all, active, archived)
-  - Clean, tabular output for easy reading
+- **📋 Repository Discovery & Listing**
+  - List all your repositories with rich details (name, visibility, status, description)
+  - View any user's public repositories without authentication
+  - Advanced filtering by status (all, active, archived)
+  - Beautiful tabular output with smart formatting
 
-- **Public Repository Discovery**: View any user's public repositories without authentication:
-  - Access any GitHub user's public repositories using just their username
-  - No GitHub token required for public repository viewing
-  - Same filtering capabilities (all, active, archived)
-  - Clean, tabular output showing repository details
+- **📤 Smart Export System**
+  - Export repository lists to text files for batch processing
+  - Full `owner/repo` format for seamless API integration
+  - Filter exports by repository status
+  - Works with both personal and public repository discovery
 
-- **Repository Export**: Generate lists of repository names for further processing:
-  - Export your repositories or any user's public repositories to text files
-  - Full repository names in `owner/repo` format for easy API usage
-  - Same filtering options (all, active, archived) available for export
-  - Seamless integration with existing list and public commands via `--export` flag
-
-- **Repository Management**: Archive and delete your repositories safely:
-  - Batch operations on multiple repositories from exported lists
-  - Preview changes before execution with confirmation prompts
-  - Safe one-by-one processing with detailed success/failure reporting
-  - Archive operations (reversible) and delete operations (irreversible)
-  - Works only with your own repositories (authentication required)
+- **🔧 Safe Repository Management**
+  - Batch archive and delete operations with safety controls
+  - Interactive preview tables before any destructive operations
+  - Required user confirmation with detailed operation summaries
+  - Granular success/failure reporting for each repository
+  - Built-in safeguards prevent accidental data loss
 
 ### Coming Soon
 
 - **Single Repository Management**: Archive or delete individual repositories via CLI arguments
+
+## 🚀 Quick Start
+
+```bash
+# Install from PyPI
+pip install github-cleaner
+
+# Set your GitHub token
+export GITHUB_TOKEN=your_token_here
+
+# List your repositories
+github-cleaner list
+
+# Export repository names for batch operations
+github-cleaner list --export my-repos.txt
+```
 
 ## Installation
 
 ### Prerequisites
 
 - Python 3.8 or higher
-- GitHub Personal Access Token with appropriate permissions
+- GitHub Personal Access Token (for private repos and management operations)
 
-### Option 1: Install from PyPI (Recommended)
+### Install from PyPI (Recommended)
 
 ```bash
-# Install the latest stable version
 pip install github-cleaner
 ```
 
-### Option 2: Install from source
+That's it! The `github-cleaner` command will be available immediately.
+
+### Alternative Installation Methods
+
+<details>
+<summary>🔧 Development Installation</summary>
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/github-cleaner.git
-cd github-cleaner
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-### Option 3: Development installation
-
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/github-cleaner.git
+git clone https://github.com/RumTumTum/github-cleaner.git
 cd github-cleaner
 
 # Install in development mode
 pip install -e .
 ```
+</details>
+
+<details>
+<summary>📦 Install from Source</summary>
+
+```bash
+# Clone the repository
+git clone https://github.com/RumTumTum/github-cleaner.git
+cd github-cleaner
+
+# Install dependencies
+pip install -r requirements.txt
+```
+</details>
 
 ## Authentication
 
@@ -413,7 +440,7 @@ Some operations failed. Check the details above for more information.
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/github-cleaner.git
+git clone https://github.com/RumTumTum/github-cleaner.git
 cd github-cleaner
 
 # Create a virtual environment
