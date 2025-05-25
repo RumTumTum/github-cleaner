@@ -1,7 +1,8 @@
 from setuptools import setup, find_packages
 
 # Read version from package
-exec(open("github_cleaner/__version__.py").read())
+version_dict = {}
+exec(open("github_cleaner/__version__.py").read(), version_dict)
 
 # Read long description from README
 with open("README.md", "r", encoding="utf-8") as fh:
@@ -9,7 +10,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="github-cleaner",
-    version=__version__,
+    version=version_dict["__version__"],
     description="A Python CLI tool to manage GitHub repositories",
     long_description=long_description,
     long_description_content_type="text/markdown",
