@@ -307,9 +307,9 @@ Total repositories: 3
 ```bash
 $ github-cleaner public octocat --filter active
                     Active Public Repositories for @octocat                     
-┏━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ Name               ┃ Visibility ┃ Status ┃ Description                       ┃
-┡━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+┌────────────────────┬────────────┬────────┬───────────────────────────────────┐
+│ Name               │ Visibility │ Status │ Description                       │
+├────────────────────┼────────────┼────────┼───────────────────────────────────┤
 │ boysenberry-repo-1 │ Public     │ Active │ Testing                           │
 │ git-consortium     │ Public     │ Active │ This repo is for demonstration    │
 │                    │            │        │ purposes only.                    │
