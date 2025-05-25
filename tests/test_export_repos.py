@@ -8,7 +8,7 @@ from click.testing import CliRunner
 # Add the parent directory to the path so we can import main
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from main import cli
+from github_cleaner.cli import cli
 
 # Create a mock for GitHub Repository objects
 class MockRepository:
@@ -27,8 +27,8 @@ class TestExportFlag(unittest.TestCase):
     def setUp(self):
         self.runner = CliRunner()
     
-    @patch('main.Github')
-    @patch('main.get_github_token', return_value='fake-token')
+    @patch('github_cleaner.core.Github')
+    @patch('github_cleaner.core.get_github_token', return_value='fake-token')
     @patch('builtins.open', new_callable=mock_open)
     def test_list_command_with_export_flag(self, mock_file, mock_get_token, mock_github):
         # Set up mock repos
@@ -69,8 +69,8 @@ class TestExportFlag(unittest.TestCase):
         self.assertIn('Exported 2 all repositories to test-repos.txt', result.output)
         self.assertNotIn('Total repositories:', result.output)  # Table not shown
 
-    @patch('main.Github')
-    @patch('main.get_github_token', return_value='fake-token')
+    @patch('github_cleaner.core.Github')
+    @patch('github_cleaner.core.get_github_token', return_value='fake-token')
     @patch('builtins.open', new_callable=mock_open)
     def test_list_command_with_export_and_filter(self, mock_file, mock_get_token, mock_github):
         # Set up mock repos
@@ -106,7 +106,7 @@ class TestExportFlag(unittest.TestCase):
         # Verify success message shows filtered count
         self.assertIn('Exported 1 active repositories to active-repos.txt', result.output)
 
-    @patch('main.Github')
+    @patch('github_cleaner.core.Github')
     def test_public_command_with_export_flag(self, mock_github):
         # Set up mock repos
         mock_repo1 = MockRepository(
@@ -160,7 +160,7 @@ class TestExportFlag(unittest.TestCase):
             # Clean up temporary file
             os.unlink(temp_filename)
 
-    @patch('main.Github')
+    @patch('github_cleaner.core.Github')
     def test_public_command_with_export_and_filter(self, mock_github):
         # Set up mock repos
         mock_repo1 = MockRepository(
@@ -205,8 +205,8 @@ class TestExportFlag(unittest.TestCase):
             # Clean up temporary file
             os.unlink(temp_filename)
 
-    @patch('main.Github')
-    @patch('main.get_github_token', return_value='fake-token')
+    @patch('github_cleaner.core.Github')
+    @patch('github_cleaner.core.get_github_token', return_value='fake-token')
     def test_list_command_without_export_shows_table(self, mock_get_token, mock_github):
         # Set up mock repos
         mock_repo = MockRepository(name='test-repo', full_name='testuser/test-repo')
@@ -227,7 +227,7 @@ class TestExportFlag(unittest.TestCase):
         self.assertIn('Total repositories: 1', result.output)
         self.assertNotIn('Exported', result.output)
 
-    @patch('main.Github')
+    @patch('github_cleaner.core.Github')
     def test_public_command_without_export_shows_table(self, mock_github):
         # Set up mock repos
         mock_repo = MockRepository(name='test-repo', full_name='octocat/test-repo')
@@ -248,8 +248,8 @@ class TestExportFlag(unittest.TestCase):
         self.assertIn('Total public repositories: 1', result.output)
         self.assertNotIn('Exported', result.output)
 
-    @patch('main.Github')
-    @patch('main.get_github_token', return_value='fake-token')
+    @patch('github_cleaner.core.Github')
+    @patch('github_cleaner.core.get_github_token', return_value='fake-token')
     @patch('builtins.open', side_effect=PermissionError("Permission denied"))
     def test_export_file_permission_error(self, mock_file, mock_get_token, mock_github):
         # Set up mock repos
@@ -273,7 +273,7 @@ class TestExportFlag(unittest.TestCase):
     def test_export_validates_full_name_format(self):
         """Test that export uses full_name (owner/repo) format, not just repo name."""
         # Test the export_repositories function directly
-        from main import export_repositories
+        from github_cleaner.core import export_repositories
         
         # Create mock repositories with different owners
         mock_repos = [

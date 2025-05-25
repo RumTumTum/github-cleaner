@@ -7,7 +7,7 @@ from click.testing import CliRunner
 # Add the parent directory to the path so we can import main
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from main import cli
+from github_cleaner.cli import cli
 
 # Create a mock for GitHub Repository objects
 class MockRepository:
@@ -26,8 +26,8 @@ class TestFullNamesFlag(unittest.TestCase):
     def setUp(self):
         self.runner = CliRunner()
     
-    @patch('main.Github')
-    @patch('main.get_github_token', return_value='fake-token')
+    @patch('github_cleaner.core.Github')
+    @patch('github_cleaner.core.get_github_token', return_value='fake-token')
     def test_list_command_default_shows_repo_names(self, mock_get_token, mock_github):
         # Set up mock repos
         mock_repo = MockRepository(
@@ -50,8 +50,8 @@ class TestFullNamesFlag(unittest.TestCase):
         self.assertIn('test-repo', result.output)
         self.assertNotIn('testuser/test-repo', result.output)
 
-    @patch('main.Github')
-    @patch('main.get_github_token', return_value='fake-token')
+    @patch('github_cleaner.core.Github')
+    @patch('github_cleaner.core.get_github_token', return_value='fake-token')
     def test_list_command_with_full_names_shows_full_names(self, mock_get_token, mock_github):
         # Set up mock repos
         mock_repo = MockRepository(
@@ -73,7 +73,7 @@ class TestFullNamesFlag(unittest.TestCase):
         # Verify full name is shown in table
         self.assertIn('testuser/test-repo', result.output)
 
-    @patch('main.Github')
+    @patch('github_cleaner.core.Github')
     def test_public_command_default_shows_repo_names(self, mock_github):
         # Set up mock repos
         mock_repo = MockRepository(
@@ -96,7 +96,7 @@ class TestFullNamesFlag(unittest.TestCase):
         self.assertIn('public-repo', result.output)
         self.assertNotIn('octocat/public-repo', result.output)
 
-    @patch('main.Github')
+    @patch('github_cleaner.core.Github')
     def test_public_command_with_full_names_shows_full_names(self, mock_github):
         # Set up mock repos
         mock_repo = MockRepository(
@@ -118,8 +118,8 @@ class TestFullNamesFlag(unittest.TestCase):
         # Verify full name is shown in table
         self.assertIn('octocat/public-repo', result.output)
 
-    @patch('main.Github')
-    @patch('main.get_github_token', return_value='fake-token')
+    @patch('github_cleaner.core.Github')
+    @patch('github_cleaner.core.get_github_token', return_value='fake-token')
     def test_list_command_full_names_with_filter(self, mock_get_token, mock_github):
         # Set up mock repos
         mock_repo1 = MockRepository(
@@ -150,7 +150,7 @@ class TestFullNamesFlag(unittest.TestCase):
         # Verify archived repo is not shown
         self.assertNotIn('testuser/archived-repo', result.output)
 
-    @patch('main.Github')
+    @patch('github_cleaner.core.Github')
     def test_public_command_full_names_with_filter(self, mock_github):
         # Set up mock repos
         mock_repo1 = MockRepository(
@@ -181,8 +181,8 @@ class TestFullNamesFlag(unittest.TestCase):
         # Verify active repo is not shown
         self.assertNotIn('octocat/active-repo', result.output)
 
-    @patch('main.Github')
-    @patch('main.get_github_token', return_value='fake-token')
+    @patch('github_cleaner.core.Github')
+    @patch('github_cleaner.core.get_github_token', return_value='fake-token')
     def test_full_names_flag_doesnt_affect_export(self, mock_get_token, mock_github):
         # Set up mock repos
         mock_repo = MockRepository(
@@ -212,7 +212,7 @@ class TestFullNamesFlag(unittest.TestCase):
 
     def test_create_repository_table_function_directly(self):
         """Test the create_repository_table function directly with full_names parameter."""
-        from main import create_repository_table
+        from github_cleaner.core import create_repository_table
         from rich.console import Console
         import io
         
